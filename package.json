@@ -1,11 +1,12 @@
 {
   "name": "gameboydisassembler",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "Disassemble gameboy games",
-  "main": "index.js",
+  "main": "./dist/disassemblerMain.js",
   "scripts": {
+      "build":"babel disassembler --presets babel-preset-es2015 --out-dir dist",
     "test": "mocha -w --compilers js:babel-core/register ./**/*.spec.js",
-    "integration": "mocha -w --compilers js:babel-core/register ./**/*.integration.js"
+    "integration": "mocha -w --compilers js:babel-core/register ./disassembler/**/*.integration.js ./roms/**/*.integration.js"
   },
   "repository": {
     "type": "git",
