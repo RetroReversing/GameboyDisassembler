@@ -31,15 +31,11 @@
     "babel-preset-es2016": "^6.24.1",
     "babel-preset-react": "^6.24.1",
     "babelify": "^7.3.0",
-    "browserify-css": "^0.10.1",
-    "gulp": "^3.9.1",
-    "gulp-gh-pages": "^0.5.4",
     "jest": "^20.0.4",
     "jest-webpack": "^0.3.0",
     "mochify": "^3.3.0",
     "regenerator-runtime": "^0.10.5",
     "ts-jest": "^20.0.7",
-    "typescript": "^2.4.2",
-    "webpack": "^3.3.0"
+    "typescript": "^2.4.2"
   }
 }
