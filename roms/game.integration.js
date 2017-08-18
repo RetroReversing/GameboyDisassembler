@@ -1,8 +1,8 @@
 import {DisassembleRomBytes, DisassembleBytes, findAllJumpInstructions} from '../disassembler/disassemblerMain';
 import * as assert from 'assert';
 import snapshot from 'snap-shot';
-
-var fs = require('fs');
+import { describe, it } from 'mocha';
+import * as fs from 'fs';
 
 describe('Integration tests for Disassembling Game.gb', function () {
   it('should generate assembly output for game.gb', function () {

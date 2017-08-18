@@ -1,5 +1,6 @@
 import {DisassembleBytes, convertToHex, hasAlreadyVisited, convertHexStringToNumber, joinOpcodesAndOperands} from './disassemblerMain';
 import * as assert from 'assert';
+import { describe, it } from 'mocha';
 
 describe('Disassemble Rom', function () {
   it('should generate assembly output for single INC C', function (done) {
