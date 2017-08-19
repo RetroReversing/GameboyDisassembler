@@ -1,44 +1,44 @@
-import {one_byte_instructions, two_byte_instructions, three_byte_instructions, cb_prefixed_ops} from './disassemblerInstructions';
+import {oneByteInstructions, twoByteInstructions, threeByteInstructions, cbPrefixedOps} from './disassemblerInstructions';
 const { Seq } = require('immutable');
 const _ = require('lodash');
 
 function handleCBPrefixedInstructions (CBByte, actualInstruction) {
   if (CBByte !== 0xCB) return 'Error value not CB';
-  return cb_prefixed_ops[actualInstruction];
+  return cbPrefixedOps[actualInstruction];
 }
 
 function handleTwoByteInstructions (byteValue, operandByte) {
-  const instruction = two_byte_instructions[byteValue];
+  const instruction = twoByteInstructions[byteValue];
   const operand = convertToHex(operandByte);
   return instruction + ' ' + operand;
 }
 
 function handleThreeByteInstructions (byteValue, operandByte1, operandByte2) {
-  const instruction = three_byte_instructions[byteValue];
+  const instruction = threeByteInstructions[byteValue];
   const operand = convertToHex(operandByte2) + convertToHex(operandByte1, '');
   return instruction + ' ' + operand;
 }
 
 function disassembleByte (byteValue, key, byteArray) {
   const opcode = byteValue[0];
-  if (one_byte_instructions[opcode]) { return one_byte_instructions[opcode]; }
+  if (oneByteInstructions[opcode]) { return oneByteInstructions[opcode]; }
   const operand = byteValue[1];
   if (opcode === 0xCB) {
     return handleCBPrefixedInstructions(opcode, operand);
   }
-  if (two_byte_instructions[opcode]) {
+  if (twoByteInstructions[opcode]) {
     return handleTwoByteInstructions(opcode, operand);
   }
-  if (three_byte_instructions[opcode]) {
+  if (threeByteInstructions[opcode]) {
     return handleThreeByteInstructions(opcode, operand, byteValue[2]);
   }
 }
 
 function getNumberOfBytesForInstruction (opcode) {
   if (opcode === 0xCB) return 2;
-  if (one_byte_instructions[opcode]) { return 1; }
-  if (two_byte_instructions[opcode]) { return 2; }
-  if (three_byte_instructions[opcode]) { return 3; }
+  if (oneByteInstructions[opcode]) { return 1; }
+  if (twoByteInstructions[opcode]) { return 2; }
+  if (threeByteInstructions[opcode]) { return 3; }
     //
     // # For unknown opcodes such as 0xDD it should just be 1 byte
     //
@@ -47,7 +47,6 @@ function getNumberOfBytesForInstruction (opcode) {
 
 function skipBytesAndAddOperandsToLastInstruction (assemblyInstructions, operandValue) {
   const lastInstructionEntryIndex = assemblyInstructions.lastAddedInstruction;
-    // console.error('addressOfOpcode',addressOfOpcode);
   assemblyInstructions.instructions[lastInstructionEntryIndex].push(operandValue);
   assemblyInstructions.skipBytes -= 1;
   return assemblyInstructions;
@@ -68,7 +67,7 @@ export function joinOpcodesAndOperands (assemblyInstructions, value, index, coll
   return skipBytesAndAddOperandsToLastInstruction(assemblyInstructions, value, index);
 }
 
-function reduceBytesToDisassembleIntoInstructionGroupData (bytesToDisassemble) {
+export function reduceBytesToDisassembleIntoInstructionGroupData (bytesToDisassemble) {
   return _.reduce(bytesToDisassemble, joinOpcodesAndOperands, {instructions: {}, skipBytes: 0, keys: []});
 }
 
@@ -84,9 +83,10 @@ function isJumpInstruction (instruction) {
   return jumpInstructions[instruction[0]];
 }
 
-function calculateJumpLocation (instruction) {
+export function calculateJumpLocation (instruction) {
   if (instruction.length === 3) {
-    return convertHexStringToNumber(instruction[1] + '' + instruction[2]);
+    const hexString = instruction[2].toString(16) + '' + instruction[1].toString(16);
+    return convertHexStringToNumber(hexString);
   }
   return instruction[1];
 }
@@ -97,7 +97,8 @@ function parseInstruction (instruction, state) {
   }
   state.pc += instruction.length;
   if (isJumpInstruction(instruction)) {
-    state.jumpAddresses.push(calculateJumpLocation(instruction));
+    let jumpDestination = calculateJumpLocation(instruction);
+    state.jumpAddresses.push(jumpDestination);
   } else {
     console.log('Not a jump instruction:', instruction[0]);
   }
@@ -121,8 +122,8 @@ function resetVisitedAddresses () {
 }
 
 function disassembleLoop (startAddress, groupsOfInstructions, addressesToJumpTo) {
+  resetVisitedAddresses();
   addressesToJumpTo.push(startAddress);
-  let nextAddress = startAddress;
   let state = {pc: startAddress, jumpAddresses: [startAddress]};
   let maxLoops = 2;
   let currentLoop = 0;
@@ -139,13 +140,10 @@ function disassembleLoop (startAddress, groupsOfInstructions, addressesToJumpTo)
     // groupsOfInstructions.keys.forEach(function(address) {
     //     addressesToJumpTo.push(address);
     // })
-  groupsOfInstructions[startAddress];
   return state.jumpAddresses;
 }
 
 export function findAllJumpInstructions (bytesToDisassemble, startAddress) {
-  let jumpInstructions = [startAddress];
-  bytesToDisassemble[startAddress];
   const groupsOfInstructions = reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble);
   return disassembleLoop(startAddress, groupsOfInstructions, []);
 }

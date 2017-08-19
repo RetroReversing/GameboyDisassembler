@@ -1,4 +1,4 @@
-import {DisassembleBytes, convertToHex, hasAlreadyVisited, convertHexStringToNumber, joinOpcodesAndOperands} from './disassemblerMain';
+import {DisassembleBytes, convertToHex, hasAlreadyVisited, convertHexStringToNumber, joinOpcodesAndOperands, calculateJumpLocation} from './disassemblerMain';
 import * as assert from 'assert';
 import { describe, it } from 'mocha';
 
@@ -84,5 +84,10 @@ describe('Disassemble Rom', function () {
   it('should be able to convert #FFFF to number', function () {
     const result = convertHexStringToNumber('FFFF');
     assert.deepEqual(result, 65535);
+  });
+
+  it('should be able to convert [C3,80,01] to 0x150 (336)', function () {
+    const result = calculateJumpLocation([0xC3, 80, 1]);
+    assert.deepEqual(result, 336);
   });
 });
