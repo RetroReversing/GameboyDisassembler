@@ -1,4 +1,4 @@
-import {oneByteInstructions, twoByteInstructions, threeByteInstructions, cbPrefixedOps} from './disassemblerInstructions';
+import {isJumpInstruction, isCallInstruction, oneByteInstructions, twoByteInstructions, threeByteInstructions, cbPrefixedOps} from './disassemblerInstructions';
 const { Seq } = require('immutable');
 const _ = require('lodash');
 
@@ -75,14 +75,6 @@ function reduceBytesToDisassembleIntoInstructionGroups (bytesToDisassemble) {
   return reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble).instructions;
 }
 
-const jumpInstructions = {
-  0x18: true,
-  0xC3: {}
-};
-function isJumpInstruction (instruction) {
-  return jumpInstructions[instruction[0]];
-}
-
 export function calculateJumpLocation (instruction) {
   if (instruction.length === 3) {
     const hexString = instruction[2].toString(16) + '' + instruction[1].toString(16);
@@ -91,14 +83,22 @@ export function calculateJumpLocation (instruction) {
   return instruction[1];
 }
 
+/**
+ *
+ *
+ * @param {any} instruction
+ * @param {any} state
+ * @returns
+ */
 function parseInstruction (instruction, state) {
   if (instruction.length > 3) {
     console.log('instruction.length:', instruction.length, instruction);
   }
   state.pc += instruction.length;
   if (isJumpInstruction(instruction)) {
-    let jumpDestination = calculateJumpLocation(instruction);
+    const jumpDestination = calculateJumpLocation(instruction);
     state.jumpAddresses.push(jumpDestination);
+    state.pc = jumpDestination;
   } else {
     console.log('Not a jump instruction:', instruction[0]);
   }
@@ -125,7 +125,7 @@ function disassembleLoop (startAddress, groupsOfInstructions, addressesToJumpTo)
   resetVisitedAddresses();
   addressesToJumpTo.push(startAddress);
   let state = {pc: startAddress, jumpAddresses: [startAddress]};
-  let maxLoops = 2;
+  let maxLoops = 20;
   let currentLoop = 0;
   while (true) {
     const instruction = groupsOfInstructions.instructions[state.pc];
@@ -143,6 +143,13 @@ function disassembleLoop (startAddress, groupsOfInstructions, addressesToJumpTo)
   return state.jumpAddresses;
 }
 
+/**
+ * Find all Jump instructions in a rom
+ * @export
+ * @param {any} bytesToDisassemble
+ * @param {any} startAddress
+ * @returns
+ */
 export function findAllJumpInstructions (bytesToDisassemble, startAddress) {
   const groupsOfInstructions = reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble);
   return disassembleLoop(startAddress, groupsOfInstructions, []);
