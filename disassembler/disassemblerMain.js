@@ -1,4 +1,5 @@
-import {isJumpInstruction, isCallInstruction, isRetInstruction, oneByteInstructions, twoByteInstructions, threeByteInstructions, cbPrefixedOps} from './disassemblerInstructions';
+import {oneByteInstructions, twoByteInstructions, threeByteInstructions, cbPrefixedOps} from './disassemblerInstructions';
+import {parseJumpInstruction, parseCallInstruction} from './instructionParsing/instructionParsing';
 const { Seq } = require('immutable');
 const _ = require('lodash');
 
@@ -93,33 +94,6 @@ export function calculateJumpLocation (instruction, state) {
     return convertHexStringToNumber(hexString);
   }
   return state.pc + convertTo8BitSignedValue(instruction[1]);
-}
-
-function parseJumpInstruction (instruction, state) {
-  if (!isJumpInstruction(instruction)) return state;
-  const jumpDestination = calculateJumpLocation(instruction, state);
-  state.jumpAddresses.push(jumpDestination);
-  state.jumpAssemblyInstructions[state.pc] = DisassembleBytes(instruction);
-  state.pc = jumpDestination;
-  return state;
-}
-
-function parseCallInstruction (instruction, state) {
-  if (!isCallInstruction(instruction)) return state;
-  const jumpDestination = calculateJumpLocation(instruction, state);
-  state.jumpAddresses.push(jumpDestination);
-  state.jumpAssemblyInstructions[state.pc] = DisassembleBytes(instruction);
-  state.pc = jumpDestination;
-  return state;
-}
-
-export function parseRetInstruction (instruction, state) {
-  if (!isRetInstruction(instruction)) return state;
-  const jumpDestination = state.callStack.pop();
-  // state.jumpAddresses.push(jumpDestination);
-  state.jumpAssemblyInstructions[state.pc] = DisassembleBytes(instruction);
-  state.pc = jumpDestination;
-  return state;
 }
 
 /**

@@ -1,4 +1,4 @@
-import {DisassembleBytes, convertTo8BitSignedValue, is8BitSignedValueNegative, parseRetInstruction, convertToHex, hasAlreadyVisited, convertHexStringToNumber, joinOpcodesAndOperands, calculateJumpLocation} from './disassemblerMain';
+import {DisassembleBytes, convertTo8BitSignedValue, is8BitSignedValueNegative, convertToHex, hasAlreadyVisited, convertHexStringToNumber, joinOpcodesAndOperands, calculateJumpLocation} from './disassemblerMain';
 import {isJumpInstruction, isCallInstruction, isRetInstruction} from './disassemblerInstructions';
 import * as assert from 'assert';
 import { describe, it } from 'mocha';
@@ -119,12 +119,6 @@ describe('Disassemble Rom', function () {
       const result = isRetInstruction([jmp]);
       assert.deepEqual(result, {});
     });
-  });
-
-  it('should parse RET instruction and jump back to where it was called from', function () {
-    const resultState = parseRetInstruction([0xC0], {callStack: [0x100], jumpAssemblyInstructions: {}});
-    assert.deepEqual(resultState.pc, 0x100);
-    assert.deepEqual(resultState.callStack, []);
   });
 
   it('should be able to detect if a signed value is negative', function () {
