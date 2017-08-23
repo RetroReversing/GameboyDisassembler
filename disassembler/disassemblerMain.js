@@ -1,5 +1,6 @@
 import {oneByteInstructions, twoByteInstructions, threeByteInstructions, cbPrefixedOps} from './disassemblerInstructions';
-import {parseJumpInstruction, parseCallInstruction} from './instructionParsing/instructionParsing';
+import {parseInstruction} from './instructionParsing/instructionParsing';
+import {convertTo8BitSignedValue, convertHexStringToNumber, convertToHex} from './Util/ValueConversion';
 const { Seq } = require('immutable');
 const _ = require('lodash');
 
@@ -76,44 +77,12 @@ function reduceBytesToDisassembleIntoInstructionGroups (bytesToDisassemble) {
   return reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble).instructions;
 }
 
-export function is8BitSignedValueNegative (signed8bitValue) {
-  if ((signed8bitValue & 0x80) === 128) return true;
-  return false;
-}
-
-export function convertTo8BitSignedValue (value) {
-  if (is8BitSignedValueNegative(value)) {
-    return -(value & 0x7F);
-  }
-  return value;
-}
-
 export function calculateJumpLocation (instruction, state) {
   if (instruction.length === 3) {
     const hexString = instruction[2].toString(16) + '' + instruction[1].toString(16);
     return convertHexStringToNumber(hexString);
   }
   return state.pc + convertTo8BitSignedValue(instruction[1]);
-}
-
-/**
- *
- *
- * @param {any} instruction
- * @param {any} state
- * @returns
- */
-function parseInstruction (instruction, state) {
-  if (instruction.length > 3) {
-    console.info('instruction.length:', instruction.length, instruction);
-  }
-  const instructionPCAddress = convertToHex(state.pc - 1);
-  state.allAssemblyInstructions[instructionPCAddress] = DisassembleBytes(instruction);
-  // now calculate jumps etc
-  state.pc += instruction.length;
-  state = parseJumpInstruction(instruction, state);
-  state = parseCallInstruction(instruction, state);
-  return state;
 }
 
 let visitedLocations = {};
@@ -182,13 +151,4 @@ export function DisassembleBytes (bytesToDisassemble) {
            .map(disassembleByte)
            .filter(assemblyCode => assemblyCode !== '')
            .toArray();
-}
-
-export function convertToHex (value, prefix = '$') {
-  if (value === undefined) return 'ErrorInConvertToHex';
-  return prefix + ((value).toString(16)).toUpperCase();
-}
-
-export function convertHexStringToNumber (hexString) {
-  return parseInt(hexString, 16);
 }

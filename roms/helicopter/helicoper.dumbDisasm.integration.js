@@ -15,10 +15,10 @@ beforeEach(function () {
   chaiJestSnapshot.configureUsingMochaContext(this);
 });
 
-describe('Integration tests for Helicoper.js', function () {
-  it('should generate assembly output for helicopter.gb', function () {
+describe('Integration tests for Dumb disassembling of Helicoper.js', function () {
+  it('should generate assembly output for helicopter.gb without traversal', function () {
     var romData = fs.readFileSync('./roms/helicopter/helicopter.gb');
-    const resultingAssembly = DisassembleBytes(romData);
+    const resultingAssembly = DisassembleBytes(romData).join('\n');
     expect(resultingAssembly).to.matchSnapshot();
   });
 });

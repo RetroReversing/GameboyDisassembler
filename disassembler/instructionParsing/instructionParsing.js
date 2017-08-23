@@ -1,5 +1,5 @@
 import {isJumpInstruction, isCallInstruction, isRetInstruction} from '../disassemblerInstructions';
-import {calculateJumpLocation, DisassembleBytes} from '../disassemblerMain';
+import {calculateJumpLocation, DisassembleBytes, convertToHex} from '../disassemblerMain';
 
 export function parseJumpInstruction (instruction, state) {
   if (!isJumpInstruction(instruction)) return state;
@@ -25,5 +25,25 @@ export function parseRetInstruction (instruction, state) {
   const jumpDestination = state.callStack.pop();
   state.jumpAssemblyInstructions[state.pc] = DisassembleBytes(instruction);
   state.pc = jumpDestination;
+  return state;
+}
+
+/**
+ *
+ *
+ * @param {any} instruction
+ * @param {any} state
+ * @returns
+ */
+export function parseInstruction (instruction, state) {
+  if (instruction.length > 3) {
+    console.info('instruction.length:', instruction.length, instruction);
+  }
+  const instructionPCAddress = convertToHex(state.pc - 1);
+  state.allAssemblyInstructions[instructionPCAddress] = DisassembleBytes(instruction);
+  // now calculate jumps etc
+  state.pc += instruction.length;
+  state = parseJumpInstruction(instruction, state);
+  state = parseCallInstruction(instruction, state);
   return state;
 }
