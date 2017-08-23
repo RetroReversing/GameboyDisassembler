@@ -1,4 +1,4 @@
-import {isJumpInstruction, isCallInstruction, oneByteInstructions, twoByteInstructions, threeByteInstructions, cbPrefixedOps} from './disassemblerInstructions';
+import {isJumpInstruction, isCallInstruction, isRetInstruction, oneByteInstructions, twoByteInstructions, threeByteInstructions, cbPrefixedOps} from './disassemblerInstructions';
 const { Seq } = require('immutable');
 const _ = require('lodash');
 
@@ -75,12 +75,51 @@ function reduceBytesToDisassembleIntoInstructionGroups (bytesToDisassemble) {
   return reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble).instructions;
 }
 
-export function calculateJumpLocation (instruction) {
+export function is8BitSignedValueNegative (signed8bitValue) {
+  if ((signed8bitValue & 0x80) === 128) return true;
+  return false;
+}
+
+export function convertTo8BitSignedValue (value) {
+  if (is8BitSignedValueNegative(value)) {
+    return -(value & 0x7F);
+  }
+  return value;
+}
+
+export function calculateJumpLocation (instruction, state) {
   if (instruction.length === 3) {
     const hexString = instruction[2].toString(16) + '' + instruction[1].toString(16);
     return convertHexStringToNumber(hexString);
   }
-  return instruction[1];
+  return state.pc + convertTo8BitSignedValue(instruction[1]);
+}
+
+function parseJumpInstruction (instruction, state) {
+  if (!isJumpInstruction(instruction)) return state;
+  const jumpDestination = calculateJumpLocation(instruction, state);
+  state.jumpAddresses.push(jumpDestination);
+  state.jumpAssemblyInstructions[state.pc] = DisassembleBytes(instruction);
+  state.pc = jumpDestination;
+  return state;
+}
+
+function parseCallInstruction (instruction, state) {
+  if (!isCallInstruction(instruction)) return state;
+  const jumpDestination = calculateJumpLocation(instruction, state);
+  state.jumpAddresses.push(jumpDestination);
+  state.jumpAssemblyInstructions[state.pc] = DisassembleBytes(instruction);
+  state.pc = jumpDestination;
+  return state;
+}
+
+export function parseRetInstruction (instruction, state) {
+  if (!isRetInstruction(instruction)) return state;
+  const jumpDestination = state.callStack.pop();
+  // state.jumpAddresses.push(jumpDestination);
+  state.jumpAssemblyInstructions[state.pc] = DisassembleBytes(instruction);
+  state.pc = jumpDestination;
+  return state;
 }
 
 /**
@@ -92,16 +131,14 @@ export function calculateJumpLocation (instruction) {
  */
 function parseInstruction (instruction, state) {
   if (instruction.length > 3) {
-    console.log('instruction.length:', instruction.length, instruction);
+    console.info('instruction.length:', instruction.length, instruction);
   }
+  const instructionPCAddress = convertToHex(state.pc - 1);
+  state.allAssemblyInstructions[instructionPCAddress] = DisassembleBytes(instruction);
+  // now calculate jumps etc
   state.pc += instruction.length;
-  if (isJumpInstruction(instruction)) {
-    const jumpDestination = calculateJumpLocation(instruction);
-    state.jumpAddresses.push(jumpDestination);
-    state.pc = jumpDestination;
-  } else {
-    console.log('Not a jump instruction:', instruction[0]);
-  }
+  state = parseJumpInstruction(instruction, state);
+  state = parseCallInstruction(instruction, state);
   return state;
 }
 
@@ -109,7 +146,7 @@ let visitedLocations = {};
 
 export function hasAlreadyVisited (state) {
   if (visitedLocations[state.pc]) {
-    console.log('Already Visited:', state.pc);
+    console.info('Already Visited:', state.pc);
     return true;
   }
   visitedLocations[state.pc] = state;
@@ -124,11 +161,13 @@ function resetVisitedAddresses () {
 function disassembleLoop (startAddress, groupsOfInstructions, addressesToJumpTo) {
   resetVisitedAddresses();
   addressesToJumpTo.push(startAddress);
-  let state = {pc: startAddress, jumpAddresses: [startAddress]};
-  let maxLoops = 20;
+  let state = {pc: startAddress, jumpAddresses: [startAddress], jumpAssemblyInstructions: {}, allAssemblyInstructions: {}};
+  let maxLoops = 1000;
   let currentLoop = 0;
   while (true) {
-    const instruction = groupsOfInstructions.instructions[state.pc];
+    // Why do we have to subtract 1 to programcounter to get the correct result?
+    const instruction = groupsOfInstructions.instructions[state.pc - 1];
+    console.log('groupsOfInstructions.instructions', state.pc, groupsOfInstructions.instructions[state.pc], state.pc - 1, instruction);
     if (!instruction) {
       console.log('Instruction was undefined', instruction);
       break;
@@ -137,10 +176,7 @@ function disassembleLoop (startAddress, groupsOfInstructions, addressesToJumpTo)
     currentLoop++;
     if (hasAlreadyVisited(state) || currentLoop > maxLoops) { break; }
   }
-    // groupsOfInstructions.keys.forEach(function(address) {
-    //     addressesToJumpTo.push(address);
-    // })
-  return state.jumpAddresses;
+  return state;
 }
 
 /**
@@ -150,7 +186,7 @@ function disassembleLoop (startAddress, groupsOfInstructions, addressesToJumpTo)
  * @param {any} startAddress
  * @returns
  */
-export function findAllJumpInstructions (bytesToDisassemble, startAddress) {
+export function findAllJumpInstructions (bytesToDisassemble, startAddress = 0x100) {
   const groupsOfInstructions = reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble);
   return disassembleLoop(startAddress, groupsOfInstructions, []);
 }

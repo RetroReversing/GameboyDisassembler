@@ -1,5 +1,5 @@
-import {DisassembleBytes, convertToHex, hasAlreadyVisited, convertHexStringToNumber, joinOpcodesAndOperands, calculateJumpLocation} from './disassemblerMain';
-import {isJumpInstruction, isCallInstruction} from './disassemblerInstructions';
+import {DisassembleBytes, convertTo8BitSignedValue, is8BitSignedValueNegative, parseRetInstruction, convertToHex, hasAlreadyVisited, convertHexStringToNumber, joinOpcodesAndOperands, calculateJumpLocation} from './disassemblerMain';
+import {isJumpInstruction, isCallInstruction, isRetInstruction} from './disassemblerInstructions';
 import * as assert from 'assert';
 import { describe, it } from 'mocha';
 
@@ -62,6 +62,11 @@ describe('Disassemble Rom', function () {
     assert.equal(hexResult, '$AE');
   });
 
+  it('should convert 1211 to hex value $4BB', function () {
+    const hexResult = convertToHex(1211);
+    assert.equal(hexResult, '$4BB');
+  });
+
   it('should return error when not provided parameter', function () {
     const hexResult = convertToHex();
     assert.equal(hexResult, 'ErrorInConvertToHex');
@@ -88,7 +93,7 @@ describe('Disassemble Rom', function () {
   });
 
   it('should be able to convert [C3,80,01] to 0x150 (336)', function () {
-    const result = calculateJumpLocation([0xC3, 80, 1]);
+    const result = calculateJumpLocation([0xC3, 80, 1], {pc: 0x100});
     assert.deepEqual(result, 336);
   });
 
@@ -106,5 +111,49 @@ describe('Disassemble Rom', function () {
       const result = isCallInstruction([jmp]);
       assert.deepEqual(result, {});
     });
+  });
+
+  it('should return true for all valid RET instructions', function () {
+    const validJumpInstructions = [ 0xC0, 0xC8, 0xC9, 0xD0, 0xD8, 0xD9 ];
+    validJumpInstructions.forEach(jmp => {
+      const result = isRetInstruction([jmp]);
+      assert.deepEqual(result, {});
+    });
+  });
+
+  it('should parse RET instruction and jump back to where it was called from', function () {
+    const resultState = parseRetInstruction([0xC0], {callStack: [0x100], jumpAssemblyInstructions: {}});
+    assert.deepEqual(resultState.pc, 0x100);
+    assert.deepEqual(resultState.callStack, []);
+  });
+
+  it('should be able to detect if a signed value is negative', function () {
+    const result = is8BitSignedValueNegative(129);
+    assert.equal(result, true);
+  });
+
+  it('should be able to detect if a signed value is positive', function () {
+    const result = is8BitSignedValueNegative(12);
+    assert.equal(result, false);
+  });
+
+  it('should be able to convert to negative 8Bit Signed Value', function () {
+    const result = convertTo8BitSignedValue(129);
+    assert.equal(result, -1);
+  });
+
+  it('should be able to convert to positive 8Bit Signed Value', function () {
+    const result = convertTo8BitSignedValue(12);
+    assert.equal(result, 12);
+  });
+
+  it('should be able to support short jumps +2 bytes', function () {
+    const result = calculateJumpLocation([0x18, 0x02], {pc: 0x100});
+    assert.deepEqual(result, 258);
+  });
+
+  it('should be able to support short jumps -2 bytes', function () {
+    const result = calculateJumpLocation([0x18, 130], {pc: 0x100});
+    assert.deepEqual(result, 254);
   });
 });
