@@ -1,5 +1,6 @@
 import {isJumpInstruction, isCallInstruction, isRetInstruction} from '../disassemblerInstructions';
-import {calculateJumpLocation, DisassembleBytes, convertToHex} from '../disassemblerMain';
+import {DisassembleBytes} from '../disassemblerMain';
+import {convertTo8BitSignedValue, convertHexStringToNumber, convertToHex} from '../Util/ValueConversion';
 
 export function parseJumpInstruction (instruction, state) {
   if (!isJumpInstruction(instruction)) return state;
@@ -46,4 +47,12 @@ export function parseInstruction (instruction, state) {
   state = parseJumpInstruction(instruction, state);
   state = parseCallInstruction(instruction, state);
   return state;
+}
+
+export function calculateJumpLocation (instruction, state) {
+  if (instruction.length === 3) {
+    const hexString = instruction[2].toString(16) + '' + instruction[1].toString(16);
+    return convertHexStringToNumber(hexString);
+  }
+  return state.pc + convertTo8BitSignedValue(instruction[1]);
 }

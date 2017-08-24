@@ -21,6 +21,14 @@ function handleThreeByteInstructions (byteValue, operandByte1, operandByte2) {
   return instruction + ' ' + operand;
 }
 
+/**
+ * Disassembles a single instruction (opcode + operands)
+ *
+ * @param {any} byteValue
+ * @param {any} key
+ * @param {any} byteArray
+ * @returns
+ */
 function disassembleByte (byteValue, key, byteArray) {
   const opcode = byteValue[0];
   if (oneByteInstructions[opcode]) { return oneByteInstructions[opcode]; }
@@ -75,14 +83,6 @@ export function reduceBytesToDisassembleIntoInstructionGroupData (bytesToDisasse
 
 function reduceBytesToDisassembleIntoInstructionGroups (bytesToDisassemble) {
   return reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble).instructions;
-}
-
-export function calculateJumpLocation (instruction, state) {
-  if (instruction.length === 3) {
-    const hexString = instruction[2].toString(16) + '' + instruction[1].toString(16);
-    return convertHexStringToNumber(hexString);
-  }
-  return state.pc + convertTo8BitSignedValue(instruction[1]);
 }
 
 let visitedLocations = {};

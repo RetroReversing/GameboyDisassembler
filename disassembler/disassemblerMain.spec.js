@@ -1,4 +1,4 @@
-import {DisassembleBytes, hasAlreadyVisited, joinOpcodesAndOperands, calculateJumpLocation} from './disassemblerMain';
+import {DisassembleBytes, hasAlreadyVisited, joinOpcodesAndOperands} from './disassemblerMain';
 import {isJumpInstruction, isCallInstruction, isRetInstruction} from './disassemblerInstructions';
 import * as assert from 'assert';
 import { describe, it } from 'mocha';
@@ -64,11 +64,6 @@ describe('Disassemble Rom', function () {
     assert.deepEqual(result, false);
   });
 
-  it('should be able to convert [C3,80,01] to 0x150 (336)', function () {
-    const result = calculateJumpLocation([0xC3, 80, 1], {pc: 0x100});
-    assert.deepEqual(result, 336);
-  });
-
   it('should return true for all valid jump instructions', function () {
     const validJumpInstructions = [0x18, 0xC3, 0x20, 0x28, 0x30, 0x38, 0xC2, 0xC3, 0xCA, 0xD2, 0xDA, 0xE9];
     validJumpInstructions.forEach(jmp => {
@@ -91,15 +86,5 @@ describe('Disassemble Rom', function () {
       const result = isRetInstruction([jmp]);
       assert.deepEqual(result, {});
     });
-  });
-
-  it('should be able to support short jumps +2 bytes', function () {
-    const result = calculateJumpLocation([0x18, 0x02], {pc: 0x100});
-    assert.deepEqual(result, 258);
-  });
-
-  it('should be able to support short jumps -2 bytes', function () {
-    const result = calculateJumpLocation([0x18, 130], {pc: 0x100});
-    assert.deepEqual(result, 254);
   });
 });
