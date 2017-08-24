@@ -1,6 +1,6 @@
-import {isJumpInstruction, isCallInstruction, isRetInstruction} from '../disassemblerInstructions';
-import {DisassembleBytes} from '../disassemblerMain';
-import {convertTo8BitSignedValue, convertHexStringToNumber, convertToHex} from '../Util/ValueConversion';
+import {isJumpInstruction, isCallInstruction, isRetInstruction} from '../../disassemblerInstructions';
+import {DisassembleBytes} from '../../linearSweepDisassembler/LinearSweepDisassembler';
+import {convertTo8BitSignedValue, convertHexStringToNumber, convertToHex} from '../../Util/ValueConversion';
 
 export function parseJumpInstruction (instruction, state) {
   if (!isJumpInstruction(instruction)) return state;

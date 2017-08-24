@@ -1,4 +1,4 @@
-import {DisassembleRomBytes, DisassembleBytes, findAllJumpInstructions, reduceBytesToDisassembleIntoInstructionGroupData} from '../../disassembler/disassemblerMain';
+import {DisassembleBytes} from '../../disassembler/linearSweepDisassembler/LinearSweepDisassembler';
 import * as assert from 'assert';
 import {describe, it, before, beforeEach} from 'mocha';
 import * as fs from 'fs';
