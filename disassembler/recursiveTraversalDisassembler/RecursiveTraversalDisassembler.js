@@ -1,5 +1,7 @@
 import {parseInstruction} from './instructionParsing/instructionParsing';
 import {reduceBytesToDisassembleIntoInstructionGroupData} from '../linearSweepDisassembler/LinearSweepDisassembler';
+import {reduce} from 'lodash';
+// import * as _ from 'lodash';
 /**
  * Disassemble Bytes by executing all jumps, ignoring data, if you don't have data bytes use DisassembleBytesWithRecursiveTraversal
  *
@@ -10,6 +12,13 @@ import {reduceBytesToDisassembleIntoInstructionGroupData} from '../linearSweepDi
 export function DisassembleBytesWithRecursiveTraversal (bytesToDisassemble, startAddress = 0x100) {
   const groupsOfInstructions = reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble);
   return disassembleLoop(startAddress, groupsOfInstructions, []);
+}
+
+export function DisassembleBytesWithRecursiveTraversalIntoOptimizedArray (bytesToDisassemble, startAddress = 0x100) {
+  const groupsOfInstructions = reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble);
+  const resultingInstructionMap = disassembleLoop(startAddress, groupsOfInstructions, []).allAssemblyInstructions;
+  const arrayOfJustInstructions = Object.values(resultingInstructionMap);
+  return reduceInstructionCount(arrayOfJustInstructions);
 }
 
 let visitedLocations = {};
@@ -58,4 +67,21 @@ function disassembleLoop (startAddress, groupsOfInstructions, addressesToJumpTo)
 export function findAllJumpInstructions (bytesToDisassemble, startAddress = 0x100) {
   const groupsOfInstructions = reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble);
   return disassembleLoop(startAddress, groupsOfInstructions, []).jumpAssemblyInstructions;
+}
+
+function reduceIdenticalInstructionsIntoOne (newInstructionList, value, index, collection) {
+  if (index === 0 || value[0] !== collection[index - 1][0]) {
+    value.push(1);
+    newInstructionList.push(value);
+    return newInstructionList;
+  }
+  const previousElement = newInstructionList.pop();
+  previousElement[1] += 1;
+  newInstructionList.push(previousElement);
+  return newInstructionList;
+}
+
+export function reduceInstructionCount (originalInstructionList) {
+  const modifiedInstructionList = reduce(originalInstructionList, reduceIdenticalInstructionsIntoOne, []);
+  return modifiedInstructionList;
 }
