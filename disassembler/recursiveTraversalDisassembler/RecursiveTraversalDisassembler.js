@@ -40,15 +40,16 @@ function resetVisitedAddresses () {
 function disassembleLoop (startAddress, groupsOfInstructions, addressesToJumpTo) {
   resetVisitedAddresses();
   addressesToJumpTo.push(startAddress);
-  let state = {pc: startAddress, jumpAddresses: [startAddress], jumpAssemblyInstructions: {}, allAssemblyInstructions: {}, callStack: []};
+  let state = {pc: startAddress, jumpAddresses: [startAddress], jumpAssemblyInstructions: {}, allAssemblyInstructions: {}, callStack: [], additionalPaths: []};
   let maxLoops = 1000;
   let currentLoop = 0;
   while (true) {
     // Why do we have to subtract 1 to programcounter to get the correct result?
     const instruction = groupsOfInstructions.instructions[state.pc - 1];
     if (!instruction) {
-      console.log('Instruction was undefined', instruction);
-      break;
+      if (state.additionalPaths.length === 0) break;
+      state.pc = state.additionalPaths.pop();
+      continue;
     }
     state = parseInstruction(instruction, state);
     currentLoop++;

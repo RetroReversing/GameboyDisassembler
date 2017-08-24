@@ -7,6 +7,7 @@ export function parseJumpInstruction (instruction, state) {
   const jumpDestination = calculateJumpLocation(instruction, state);
   state.jumpAddresses.push(jumpDestination);
   state.jumpAssemblyInstructions[state.pc] = DisassembleBytesWithLinearSweep(instruction);
+  state.additionalPaths.push(state.pc + instruction.length);
   state.pc = jumpDestination;
   return state;
 }
