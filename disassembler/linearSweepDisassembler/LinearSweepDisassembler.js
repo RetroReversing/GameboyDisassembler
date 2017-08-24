@@ -84,18 +84,14 @@ function reduceBytesToDisassembleIntoInstructionGroups (bytesToDisassemble) {
   return reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble).instructions;
 }
 
-export function DisassembleRomBytes (bytesToDisassemble, startAddress = 0x100) {
-  return DisassembleBytes(bytesToDisassemble);
-}
-
 /**
- * Disassemble Bytes only disassembles known code bytes, if you also have data bytes use DisassembleRomBytes
+ * Disassemble Bytes only disassembles known code bytes, if you also have data bytes use DisassembleBytesWithRecursiveTraversal
  *
  * @export
  * @param {any} bytesToDisassemble
  * @returns
  */
-export function DisassembleBytes (bytesToDisassemble) {
+export function DisassembleBytesWithLinearSweep (bytesToDisassemble) {
   const instructions = reduceBytesToDisassembleIntoInstructionGroups(bytesToDisassemble);
   return Seq(instructions)
            .map(disassembleByte)

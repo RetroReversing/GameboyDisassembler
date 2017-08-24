@@ -1,4 +1,4 @@
-import {DisassembleBytes} from './LinearSweepDisassembler';
+import {DisassembleBytesWithLinearSweep} from './LinearSweepDisassembler';
 import * as assert from 'assert';
 import { describe, it } from 'mocha';
 
@@ -27,7 +27,7 @@ instructionTests.push({
 describe('Integration tests for Disassembling Roms with LinearSweep', function () {
   instructionTests.forEach(function (testDefinition) {
     it('should generate assembly output for ' + testDefinition.name, function () {
-      const resultingAssembly = DisassembleBytes(testDefinition.instructions);
+      const resultingAssembly = DisassembleBytesWithLinearSweep(testDefinition.instructions);
       assert.deepEqual(resultingAssembly, testDefinition.assembly);
     });
   });
@@ -35,7 +35,7 @@ describe('Integration tests for Disassembling Roms with LinearSweep', function (
   it('should generate assembly output for blocks of known instructions', function (done) {
     const startCodeInstructions = [0, 195, 80, 1];
     const startCodeAssembly = [ 'NOP', 'JP $150' ];
-    const resultingAssembly = DisassembleBytes(startCodeInstructions);
+    const resultingAssembly = DisassembleBytesWithLinearSweep(startCodeInstructions);
     assert.deepEqual(resultingAssembly, startCodeAssembly);
     done();
   });

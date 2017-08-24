@@ -1,12 +1,12 @@
 import {isJumpInstruction, isCallInstruction, isRetInstruction} from '../../disassemblerInstructions';
-import {DisassembleBytes} from '../../linearSweepDisassembler/LinearSweepDisassembler';
+import {DisassembleBytesWithLinearSweep} from '../../linearSweepDisassembler/LinearSweepDisassembler';
 import {convertTo8BitSignedValue, convertHexStringToNumber, convertToHex} from '../../Util/ValueConversion';
 
 export function parseJumpInstruction (instruction, state) {
   if (!isJumpInstruction(instruction)) return state;
   const jumpDestination = calculateJumpLocation(instruction, state);
   state.jumpAddresses.push(jumpDestination);
-  state.jumpAssemblyInstructions[state.pc] = DisassembleBytes(instruction);
+  state.jumpAssemblyInstructions[state.pc] = DisassembleBytesWithLinearSweep(instruction);
   state.pc = jumpDestination;
   return state;
 }
@@ -15,7 +15,7 @@ export function parseCallInstruction (instruction, state) {
   if (!isCallInstruction(instruction)) return state;
   const jumpDestination = calculateJumpLocation(instruction, state);
   state.jumpAddresses.push(jumpDestination);
-  state.jumpAssemblyInstructions[state.pc] = DisassembleBytes(instruction);
+  state.jumpAssemblyInstructions[state.pc] = DisassembleBytesWithLinearSweep(instruction);
   state.callStack.push(state.pc);
   state.pc = jumpDestination;
   return state;
@@ -24,7 +24,7 @@ export function parseCallInstruction (instruction, state) {
 export function parseRetInstruction (instruction, state) {
   if (!isRetInstruction(instruction)) return state;
   const jumpDestination = state.callStack.pop();
-  state.jumpAssemblyInstructions[state.pc] = DisassembleBytes(instruction);
+  state.jumpAssemblyInstructions[state.pc] = DisassembleBytesWithLinearSweep(instruction);
   state.pc = jumpDestination;
   return state;
 }
@@ -41,7 +41,7 @@ export function parseInstruction (instruction, state) {
     console.info('instruction.length:', instruction.length, instruction);
   }
   const instructionPCAddress = convertToHex(state.pc - 1);
-  state.allAssemblyInstructions[instructionPCAddress] = DisassembleBytes(instruction);
+  state.allAssemblyInstructions[instructionPCAddress] = DisassembleBytesWithLinearSweep(instruction);
   // now calculate jumps etc
   state.pc += instruction.length;
   state = parseJumpInstruction(instruction, state);
