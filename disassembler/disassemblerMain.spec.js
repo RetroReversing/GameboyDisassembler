@@ -18,12 +18,4 @@ describe('Disassembler Main', function () {
       assert.deepEqual(result, {});
     });
   });
-
-  it('should return true for all valid RET instructions', function () {
-    const validJumpInstructions = [ 0xC0, 0xC8, 0xC9, 0xD0, 0xD8, 0xD9 ];
-    validJumpInstructions.forEach(jmp => {
-      const result = isRetInstruction([jmp]);
-      assert.deepEqual(result, {});
-    });
-  });
 });

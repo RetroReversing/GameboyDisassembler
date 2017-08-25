@@ -1,6 +1,6 @@
 import {parseInstruction} from './instructionParsing/instructionParsing';
 import {reduceBytesToDisassembleIntoInstructionGroupData} from '../linearSweepDisassembler/LinearSweepDisassembler';
-import {reduce} from 'lodash';
+import {reduce, map} from 'lodash';
 // import * as _ from 'lodash';
 /**
  * Disassemble Bytes by executing all jumps, ignoring data, if you don't have data bytes use DisassembleBytesWithRecursiveTraversal
@@ -17,15 +17,15 @@ export function DisassembleBytesWithRecursiveTraversal (bytesToDisassemble, star
 export function DisassembleBytesWithRecursiveTraversalIntoOptimizedArray (bytesToDisassemble, startAddress = 0x100) {
   const groupsOfInstructions = reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble);
   const resultingInstructionMap = disassembleLoop(startAddress, groupsOfInstructions, []).allAssemblyInstructions;
-  const arrayOfJustInstructions = Object.values(resultingInstructionMap);
-  return reduceInstructionCount(arrayOfJustInstructions);
+  const arrayOfJustInstructions = map(resultingInstructionMap, (value, key) => [value, key.replace('$', '')]);
+  const sortedArrayByAddress = arrayOfJustInstructions.sort((a, b) => parseInt(a[1], 16) - parseInt(b[1], 16));
+  return reduceInstructionCount(sortedArrayByAddress);
 }
 
 let visitedLocations = {};
 
 export function hasAlreadyVisited (state) {
   if (visitedLocations[state.pc]) {
-    console.info('Already Visited:', state.pc);
     return true;
   }
   visitedLocations[state.pc] = state;
@@ -41,19 +41,19 @@ function disassembleLoop (startAddress, groupsOfInstructions, addressesToJumpTo)
   resetVisitedAddresses();
   addressesToJumpTo.push(startAddress);
   let state = {pc: startAddress, jumpAddresses: [startAddress], jumpAssemblyInstructions: {}, allAssemblyInstructions: {}, callStack: [], additionalPaths: []};
-  let maxLoops = 1000;
+  // let maxLoops = 1000;
   let currentLoop = 0;
   while (true) {
     // Why do we have to subtract 1 to programcounter to get the correct result?
-    const instruction = groupsOfInstructions.instructions[state.pc - 1];
-    if (!instruction) {
+    const instruction = groupsOfInstructions.instructions[state.pc];
+    if (!instruction || hasAlreadyVisited(state)) {
       if (state.additionalPaths.length === 0) break;
       state.pc = state.additionalPaths.pop();
       continue;
     }
     state = parseInstruction(instruction, state);
     currentLoop++;
-    if (hasAlreadyVisited(state) || currentLoop > maxLoops) { break; }
+    // if (hasAlreadyVisited(state) || currentLoop > maxLoops) { break; }
   }
   return state;
 }
@@ -71,13 +71,15 @@ export function findAllJumpInstructions (bytesToDisassemble, startAddress = 0x10
 }
 
 function reduceIdenticalInstructionsIntoOne (newInstructionList, value, index, collection) {
-  if (index === 0 || value[0] !== collection[index - 1][0]) {
+  const stringOfInstructionOpcode = value[0][0];
+  const previousInstruction = collection[index - 1];
+  if (index === 0 || stringOfInstructionOpcode !== previousInstruction[0][0]) {
     value.push(1);
     newInstructionList.push(value);
     return newInstructionList;
   }
   const previousElement = newInstructionList.pop();
-  previousElement[1] += 1;
+  previousElement[previousElement.length - 1] += 1;
   newInstructionList.push(previousElement);
   return newInstructionList;
 }

@@ -7,7 +7,11 @@ export function isCallInstruction (instruction) {
 }
 
 export function isRetInstruction (instruction) {
-  return retInstructions[instruction[0]];
+  return retInstructions[instruction[0]] !== undefined;
+}
+
+export function isRetConditionalInstruction (instruction) {
+  return retInstructions[instruction[0]].conditional;
 }
 
 export const oneByteInstructions = {0: 'NOP', 2: 'LD [BC],A', 3: 'INC BC', 4: 'INC B', 5: 'DEC B', 7: 'RLCA', 9: 'ADD HL,BC', 10: 'LD A,[BC]', 11: 'DEC BC', 12: 'INC C', 13: 'DEC C', 15: 'RRCA', 18: 'LD [DE],A', 19: 'INC DE', 20: 'INC D', 21: 'DEC D', 23: 'RLA', 25: 'ADD HL,DE', 26: 'LD A,[DE]', 27: 'DEC DE', 28: 'INC E', 29: 'DEC E', 31: 'RRA', 34: 'LD [HLI],A', 35: 'INC HL', 36: 'INC H', 37: 'DEC H', 39: 'DAA', 41: 'ADD HL,HL', 42: 'LD A,[HLI]', 43: 'DEC HL', 44: 'INC L', 45: 'DEC L', 47: 'CPL', 50: 'LD [HLD],A', 51: 'INC SP', 52: 'INC [HL]', 53: 'DEC [HL]', 55: 'SCF', 57: 'ADD HL,SP', 58: 'LD A,[HLD]', 59: 'DEC SP', 60: 'INC A', 61: 'DEC A', 63: 'CCF', 64: 'LD B,B', 65: 'LD B,C', 66: 'LD B,D', 67: 'LD B,E', 68: 'LD B,H', 69: 'LD B,L', 70: 'LD B,[HL]', 71: 'LD B,A', 72: 'LD C,B', 73: 'LD C,C', 74: 'LD C,D', 75: 'LD C,E', 76: 'LD C,H', 77: 'LD C,L', 78: 'LD C,[HL]', 79: 'LD C,A', 80: 'LD D,B', 81: 'LD D,C', 82: 'LD D,D', 83: 'LD D,E', 84: 'LD D,H', 85: 'LD D,L', 86: 'LD D,[HL]', 87: 'LD D,A', 88: 'LD E,B', 89: 'LD E,C', 90: 'LD E,D', 91: 'LD E,E', 92: 'LD E,H', 93: 'LD E,L', 94: 'LD E,[HL]', 95: 'LD E,A', 96: 'LD H,B', 97: 'LD H,C', 98: 'LD H,D', 99: 'LD H,E', 100: 'LD H,H', 101: 'LD H,L', 102: 'LD H,[HL]', 103: 'LD H,A', 104: 'LD L,B', 105: 'LD L,C', 106: 'LD L,D', 107: 'LD L,E', 108: 'LD L,H', 109: 'LD L,L', 110: 'LD L,[HL]', 111: 'LD L,A', 112: 'LD [HL],B', 113: 'LD [HL],C', 114: 'LD [HL],D', 115: 'LD [HL],E', 116: 'LD [HL],H', 117: 'LD [HL],L', 118: 'HALT', 119: 'LD [HL],A', 120: 'LD A,B', 121: 'LD A,C', 122: 'LD A,D', 123: 'LD A,E', 124: 'LD A,H', 125: 'LD A,L', 126: 'LD A,[HL]', 127: 'LD A,A', 128: 'ADD A,B', 129: 'ADD A,C', 130: 'ADD A,D', 131: 'ADD A,E', 132: 'ADD A,H', 133: 'ADD A,L', 134: 'ADD A,[HL]', 135: 'ADD A,A', 136: 'ADC A,B', 137: 'ADC A,C', 138: 'ADC A,D', 139: 'ADC A,E', 140: 'ADC A,H', 141: 'ADC A,L', 142: 'ADC A,[HL]', 143: 'ADC A,A', 144: 'SUB B', 145: 'SUB C', 146: 'SUB D', 147: 'SUB E', 148: 'SUB H', 149: 'SUB L', 150: 'SUB [HL]', 151: 'SUB A', 152: 'SBC A,B', 153: 'SBC A,C', 154: 'SBC A,D', 155: 'SBC A,E', 156: 'SBC A,H', 157: 'SBC A,L', 158: 'SBC A,[HL]', 159: 'SBC A,A', 160: 'AND B', 161: 'AND C', 162: 'AND D', 163: 'AND E', 164: 'AND H', 165: 'AND L', 166: 'AND [HL]', 167: 'AND A', 168: 'XOR B', 169: 'XOR C', 170: 'XOR D', 171: 'XOR E', 172: 'XOR H', 173: 'XOR L', 174: 'XOR [HL]', 175: 'XOR A', 176: 'OR B', 177: 'OR C', 178: 'OR D', 179: 'OR E', 180: 'OR H', 181: 'OR L', 182: 'OR [HL]', 183: 'OR A', 184: 'CP B', 185: 'CP C', 186: 'CP D', 187: 'CP E', 188: 'CP H', 189: 'CP L', 190: 'CP [HL]', 191: 'CP A', 192: 'RET NZ', 193: 'POP BC', 197: 'PUSH BC', 199: 'RST $00', 200: 'RET Z', 201: 'RET', 207: 'RST $08', 208: 'RET NC', 209: 'POP DE', 213: 'PUSH DE', 215: 'RST $10', 216: 'RET C', 217: 'RETI', 223: 'RST $18', 225: 'POP HL', 226: 'LD [C],A', 229: 'PUSH HL', 231: 'RST $20', 233: 'JP [HL]', 239: 'RST $28', 241: 'POP AF', 242: 'LD A,[C]', 243: 'DI', 245: 'PUSH AF', 247: 'RST $30', 249: 'LD SP,HL', 251: 'EI', 255: 'RST $38'};
@@ -38,10 +42,10 @@ export const callInstructions = {
 };
 
 export const retInstructions = {
-  0xC0: {},
-  0xC8: {},
-  0xC9: {},
-  0xD0: {},
-  0xD8: {},
-  0xD9: {}
+  0xC0: {conditional: true},
+  0xC8: {conditional: true},
+  0xC9: {conditional: false},
+  0xD0: {conditional: true},
+  0xD8: {conditional: true},
+  0xD9: {conditional: false}
 };

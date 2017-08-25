@@ -1,4 +1,4 @@
-import {hasAlreadyVisited, reduceInstructionCount} from './RecursiveTraversalDisassembler';
+import {hasAlreadyVisited, reduceInstructionCount, DisassembleBytesWithRecursiveTraversal} from './RecursiveTraversalDisassembler';
 import {isJumpInstruction, isCallInstruction, isRetInstruction} from '../disassemblerInstructions';
 import * as assert from 'assert';
 import { describe, it } from 'mocha';
@@ -29,7 +29,7 @@ describe('RecursiveTraversalDisassembler Instruction Parsing', function () {
     const validJumpInstructions = [ 0xC0, 0xC8, 0xC9, 0xD0, 0xD8, 0xD9 ];
     validJumpInstructions.forEach(jmp => {
       const result = isRetInstruction([jmp]);
-      assert.deepEqual(result, {});
+      assert.deepEqual(result, true);
     });
   });
 });
@@ -45,5 +45,19 @@ describe('RecursiveTraversalDisassembler Reduce instructions into new functions'
     const sixInstructions = [ ['NOP'], ['NOP'], ['DI'], ['DI'], ['NOP'], ['NOP'] ];
     const resultingCode = reduceInstructionCount(sixInstructions);
     assert.deepEqual(resultingCode, [ ['NOP', 2], ['DI', 2], ['NOP', 2] ]);
+  });
+});
+
+describe('RecursiveTraversalDisassembler properly jump to location but also handle non-jump cases', function () {
+  it('should jump past one instruction', function () {
+    const sixNopInstructions = [0x04, 0x0C, 0x18, 0x01, 0x22, 0x0D];
+    const resultingState = DisassembleBytesWithRecursiveTraversal(sixNopInstructions, 0x00);
+    console.log('resultingState', resultingState);
+    assert.deepEqual(resultingState.allAssemblyInstructions,
+      { '$0': [ 'INC B' ],
+        '$1': [ 'INC C' ],
+        '$2': [ 'JR $1' ],
+        '$4': [ 'LD [HLI],A' ],
+        '$5': [ 'DEC C' ] });
   });
 });

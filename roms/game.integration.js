@@ -40,8 +40,8 @@ describe('Integration tests for Proper Traversal dissassembler', function () {
   it('should return a list of jump instructions in a rom', function () {
     const romData = fs.readFileSync('./roms/helicopter/helicopter.gb');
     const jumpAddresses = findAllJumpInstructions(romData, 0x100);
-    assert.deepEqual(jumpAddresses[261], ['JP $150']);
-    assert.deepEqual(jumpAddresses[345], ['CALL $4AF']);
+    assert.deepEqual(jumpAddresses[257], ['JP $150']);
+    assert.deepEqual(jumpAddresses[341], ['CALL $4AF']);
   });
 
   it('should return a list of jump instructions in a rom snapshot helicopter.gb', function () {

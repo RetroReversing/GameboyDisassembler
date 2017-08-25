@@ -1,4 +1,4 @@
-import {isJumpInstruction, isCallInstruction, isRetInstruction} from '../../disassemblerInstructions';
+import {isJumpInstruction, isCallInstruction, isRetInstruction, isRetConditionalInstruction} from '../../disassemblerInstructions';
 import {DisassembleBytesWithLinearSweep} from '../../linearSweepDisassembler/LinearSweepDisassembler';
 import {convertTo8BitSignedValue, convertHexStringToNumber, convertToHex} from '../../Util/ValueConversion';
 
@@ -17,7 +17,8 @@ export function parseCallInstruction (instruction, state) {
   const jumpDestination = calculateJumpLocation(instruction, state);
   state.jumpAddresses.push(jumpDestination);
   state.jumpAssemblyInstructions[state.pc] = DisassembleBytesWithLinearSweep(instruction);
-  state.callStack.push(state.pc);
+  const jumpBackLocation = state.pc + instruction.length;
+  state.callStack.push(jumpBackLocation);
   state.pc = jumpDestination;
   return state;
 }
@@ -26,6 +27,9 @@ export function parseRetInstruction (instruction, state) {
   if (!isRetInstruction(instruction)) return state;
   const jumpDestination = state.callStack.pop();
   state.jumpAssemblyInstructions[state.pc] = DisassembleBytesWithLinearSweep(instruction);
+  if (isRetConditionalInstruction(instruction)) {
+    state.additionalPaths.push(state.pc + instruction.length);
+  }
   state.pc = jumpDestination;
   return state;
 }
@@ -41,12 +45,27 @@ export function parseInstruction (instruction, state) {
   if (instruction.length > 3) {
     console.info('instruction.length:', instruction.length, instruction);
   }
-  const instructionPCAddress = convertToHex(state.pc - 1);
+  const instructionPCAddress = convertToHex(state.pc);
   state.allAssemblyInstructions[instructionPCAddress] = DisassembleBytesWithLinearSweep(instruction);
   // now calculate jumps etc
-  state.pc += instruction.length;
+  const programCounterForThisInstruction = state.pc;
   state = parseJumpInstruction(instruction, state);
   state = parseCallInstruction(instruction, state);
+  if (state.pc === programCounterForThisInstruction) {
+    state = gotoNextInstructionLocation(state, instruction);
+  }
+  return state;
+}
+
+/**
+ * Go to the next instruction (update the program counter)
+ *  * this goes to the current pc plus the length of the current instruction (which gives the start address of the next function, no need to add an additional 1)
+ * @param {any} state
+ * @param {any} instruction
+ * @returns
+ */
+function gotoNextInstructionLocation (state, instruction) {
+  state.pc += instruction.length;
   return state;
 }
 
