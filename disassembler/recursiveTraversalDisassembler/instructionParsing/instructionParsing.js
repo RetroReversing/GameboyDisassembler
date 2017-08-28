@@ -51,6 +51,7 @@ export function parseInstruction (instruction, state) {
   const programCounterForThisInstruction = state.pc;
   state = parseJumpInstruction(instruction, state);
   state = parseCallInstruction(instruction, state);
+  state = parseRetInstruction(instruction, state);
   if (state.pc === programCounterForThisInstruction) {
     state = gotoNextInstructionLocation(state, instruction);
   }
