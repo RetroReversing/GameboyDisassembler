@@ -13,7 +13,7 @@ describe('RecursiveTraversalDisassembler Instruction Parsing', function () {
     const validJumpInstructions = [0x18, 0xC3, 0x20, 0x28, 0x30, 0x38, 0xC2, 0xC3, 0xCA, 0xD2, 0xDA, 0xE9];
     validJumpInstructions.forEach(jmp => {
       const result = isJumpInstruction([jmp]);
-      assert.deepEqual(result, {});
+      assert.deepEqual(result, true);
     });
   });
 
@@ -48,16 +48,20 @@ describe('RecursiveTraversalDisassembler Reduce instructions into new functions'
   });
 });
 
-describe('RecursiveTraversalDisassembler properly jump to location but also handle non-jump cases', function () {
+describe('RecursiveTraversalDisassembler Jump tests :: ', function () {
   it('should jump past one instruction', function () {
-    const sixNopInstructions = [0x04, 0x0C, 0x18, 0x01, 0x22, 0x0D];
-    const resultingState = DisassembleBytesWithRecursiveTraversal(sixNopInstructions, 0x00);
-    console.log('resultingState', resultingState);
+    const testInstructions = [0x04, 0x0C, 0x28, 0x01, 0x22, 0x0D];
+    const resultingState = DisassembleBytesWithRecursiveTraversal(testInstructions, 0x00);
     assert.deepEqual(resultingState.allAssemblyInstructions,
       { '$0': [ 'INC B' ],
         '$1': [ 'INC C' ],
-        '$2': [ 'JR $1' ],
+        '$2': [ 'JR Z, $1' ],
         '$4': [ 'LD [HLI],A' ],
         '$5': [ 'DEC C' ] });
+  });
+
+  it('should not parse bytes after unconditional Jump', function () {
+    const resultState = DisassembleBytesWithRecursiveTraversal([0x18, 0x01, 0x05, 0x00], 0x00);
+    assert.deepEqual(resultState.allAssemblyInstructions, { '$0': [ 'JR $1' ], '$3': [ 'NOP' ] });
   });
 });

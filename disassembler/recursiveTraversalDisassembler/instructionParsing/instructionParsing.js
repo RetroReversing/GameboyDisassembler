@@ -1,13 +1,20 @@
-import {isJumpInstruction, isCallInstruction, isRetInstruction, isRetConditionalInstruction} from '../../disassemblerInstructions';
+import {isJumpInstruction, isCallInstruction, isRetInstruction, isJumpConditionalInstruction, isRetConditionalInstruction} from '../../disassemblerInstructions';
 import {DisassembleBytesWithLinearSweep} from '../../linearSweepDisassembler/LinearSweepDisassembler';
 import {convertTo8BitSignedValue, convertHexStringToNumber, convertToHex} from '../../Util/ValueConversion';
+
+function addAdditionalTraversalPath (state, instruction) {
+  state.additionalPaths.push(state.pc + instruction.length);
+  return state;
+}
 
 export function parseJumpInstruction (instruction, state) {
   if (!isJumpInstruction(instruction)) return state;
   const jumpDestination = calculateJumpLocation(instruction, state);
   state.jumpAddresses.push(jumpDestination);
   state.jumpAssemblyInstructions[state.pc] = DisassembleBytesWithLinearSweep(instruction);
-  state.additionalPaths.push(state.pc + instruction.length);
+  if (isJumpConditionalInstruction(instruction)) {
+    addAdditionalTraversalPath(state, instruction);
+  }
   state.pc = jumpDestination;
   return state;
 }
@@ -28,7 +35,7 @@ export function parseRetInstruction (instruction, state) {
   const jumpDestination = state.callStack.pop();
   state.jumpAssemblyInstructions[state.pc] = DisassembleBytesWithLinearSweep(instruction);
   if (isRetConditionalInstruction(instruction)) {
-    state.additionalPaths.push(state.pc + instruction.length);
+    addAdditionalTraversalPath(state, instruction);
   }
   state.pc = jumpDestination;
   return state;
@@ -45,6 +52,9 @@ export function parseInstruction (instruction, state) {
   if (instruction.length > 3) {
     console.info('instruction.length:', instruction.length, instruction);
   }
+  //
+  // Here pc is pointing to the first instruction in this opcode
+  //
   const instructionPCAddress = convertToHex(state.pc);
   state.allAssemblyInstructions[instructionPCAddress] = DisassembleBytesWithLinearSweep(instruction);
   // now calculate jumps etc
@@ -75,5 +85,10 @@ export function calculateJumpLocation (instruction, state) {
     const hexString = instruction[2].toString(16) + '' + instruction[1].toString(16);
     return convertHexStringToNumber(hexString);
   }
-  return state.pc + convertTo8BitSignedValue(instruction[1]);
+  //
+  // This presumes the current pc points to the first byte in this instruction
+  //
+  const signedValueOfRelativeJump = convertTo8BitSignedValue(instruction[1]);
+  if (signedValueOfRelativeJump > 0) { return state.pc + (instruction.length) + signedValueOfRelativeJump; }
+  return state.pc + signedValueOfRelativeJump;
 }

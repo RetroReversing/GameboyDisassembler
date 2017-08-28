@@ -1,7 +1,6 @@
 import {parseInstruction} from './instructionParsing/instructionParsing';
 import {reduceBytesToDisassembleIntoInstructionGroupData} from '../linearSweepDisassembler/LinearSweepDisassembler';
 import {reduce, map} from 'lodash';
-// import * as _ from 'lodash';
 /**
  * Disassemble Bytes by executing all jumps, ignoring data, if you don't have data bytes use DisassembleBytesWithRecursiveTraversal
  *

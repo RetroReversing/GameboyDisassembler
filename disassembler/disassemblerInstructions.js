@@ -1,5 +1,5 @@
 export function isJumpInstruction (instruction) {
-  return jumpInstructions[instruction[0]];
+  return jumpInstructions[instruction[0]] !== undefined;
 }
 
 export function isCallInstruction (instruction) {
@@ -8,6 +8,10 @@ export function isCallInstruction (instruction) {
 
 export function isRetInstruction (instruction) {
   return retInstructions[instruction[0]] !== undefined;
+}
+
+export function isJumpConditionalInstruction (instruction) {
+  return jumpInstructions[instruction[0]].conditional;
 }
 
 export function isRetConditionalInstruction (instruction) {
@@ -20,17 +24,17 @@ export const threeByteInstructions = {1: 'LD BC,', 194: 'JP NZ,', 195: 'JP', 17:
 export const cbPrefixedOps = {0: 'RLC B', 1: 'RLC C', 2: 'RLC D', 3: 'RLC E', 4: 'RLC H', 5: 'RLC L', 6: 'RLC [HL]', 7: 'RLC A', 8: 'RRC B', 9: 'RRC C', 10: 'RRC D', 11: 'RRC E', 12: 'RRC H', 13: 'RRC L', 14: 'RRC [HL]', 15: 'RRC A', 16: 'RL B', 17: 'RL C', 18: 'RL D', 19: 'RL E', 20: 'RL H', 21: 'RL L', 22: 'RL [HL]', 23: 'RL A', 24: 'RR B', 25: 'RR C', 26: 'RR D', 27: 'RR E', 28: 'RR H', 29: 'RR L', 30: 'RR [HL]', 31: 'RR A', 32: 'SLA B', 33: 'SLA C', 34: 'SLA D', 35: 'SLA E', 36: 'SLA H', 37: 'SLA L', 38: 'SLA [HL]', 39: 'SLA A', 40: 'SRA B', 41: 'SRA C', 42: 'SRA D', 43: 'SRA E', 44: 'SRA H', 45: 'SRA L', 46: 'SRA [HL]', 47: 'SRA A', 48: 'SWAP B', 49: 'SWAP C', 50: 'SWAP D', 51: 'SWAP E', 52: 'SWAP H', 53: 'SWAP L', 54: 'SWAP [HL]', 55: 'SWAP A', 56: 'SRL B', 57: 'SRL C', 58: 'SRL D', 59: 'SRL E', 60: 'SRL H', 61: 'SRL L', 62: 'SRL [HL]', 63: 'SRL A', 64: 'BIT 0,B', 65: 'BIT 0,C', 66: 'BIT 0,D', 67: 'BIT 0,E', 68: 'BIT 0,H', 69: 'BIT 0,L', 70: 'BIT 0,[HL]', 71: 'BIT 0,A', 72: 'BIT 1,B', 73: 'BIT 1,C', 74: 'BIT 1,D', 75: 'BIT 1,E', 76: 'BIT 1,H', 77: 'BIT 1,L', 78: 'BIT 1,[HL]', 79: 'BIT 1,A', 80: 'BIT 2,B', 81: 'BIT 2,C', 82: 'BIT 2,D', 83: 'BIT 2,E', 84: 'BIT 2,H', 85: 'BIT 2,L', 86: 'BIT 2,[HL]', 87: 'BIT 2,A', 88: 'BIT 3,B', 89: 'BIT 3,C', 90: 'BIT 3,D', 91: 'BIT 3,E', 92: 'BIT 3,H', 93: 'BIT 3,L', 94: 'BIT 3,[HL]', 95: 'BIT 3,A', 96: 'BIT 4,B', 97: 'BIT 4,C', 98: 'BIT 4,D', 99: 'BIT 4,E', 100: 'BIT 4,H', 101: 'BIT 4,L', 102: 'BIT 4,[HL]', 103: 'BIT 4,A', 104: 'BIT 5,B', 105: 'BIT 5,C', 106: 'BIT 5,D', 107: 'BIT 5,E', 108: 'BIT 5,H', 109: 'BIT 5,L', 110: 'BIT 5,[HL]', 111: 'BIT 5,A', 112: 'BIT 6,B', 113: 'BIT 6,C', 114: 'BIT 6,D', 115: 'BIT 6,E', 116: 'BIT 6,H', 117: 'BIT 6,L', 118: 'BIT 6,[HL]', 119: 'BIT 6,A', 120: 'BIT 7,B', 121: 'BIT 7,C', 122: 'BIT 7,D', 123: 'BIT 7,E', 124: 'BIT 7,H', 125: 'BIT 7,L', 126: 'BIT 7,[HL]', 127: 'BIT 7,A', 128: 'RES 0,B', 129: 'RES 0,C', 130: 'RES 0,D', 131: 'RES 0,E', 132: 'RES 0,H', 133: 'RES 0,L', 134: 'RES 0,[HL]', 135: 'RES 0,A', 136: 'RES 1,B', 137: 'RES 1,C', 138: 'RES 1,D', 139: 'RES 1,E', 140: 'RES 1,H', 141: 'RES 1,L', 142: 'RES 1,[HL]', 143: 'RES 1,A', 144: 'RES 2,B', 145: 'RES 2,C', 146: 'RES 2,D', 147: 'RES 2,E', 148: 'RES 2,H', 149: 'RES 2,L', 150: 'RES 2,[HL]', 151: 'RES 2,A', 152: 'RES 3,B', 153: 'RES 3,C', 154: 'RES 3,D', 155: 'RES 3,E', 156: 'RES 3,H', 157: 'RES 3,L', 158: 'RES 3,[HL]', 159: 'RES 3,A', 160: 'RES 4,B', 161: 'RES 4,C', 162: 'RES 4,D', 163: 'RES 4,E', 164: 'RES 4,H', 165: 'RES 4,L', 166: 'RES 4,[HL]', 167: 'RES 4,A', 168: 'RES 5,B', 169: 'RES 5,C', 170: 'RES 5,D', 171: 'RES 5,E', 172: 'RES 5,H', 173: 'RES 5,L', 174: 'RES 5,[HL]', 175: 'RES 5,A', 176: 'RES 6,B', 177: 'RES 6,C', 178: 'RES 6,D', 179: 'RES 6,E', 180: 'RES 6,H', 181: 'RES 6,L', 182: 'RES 6,[HL]', 183: 'RES 6,A', 184: 'RES 7,B', 185: 'RES 7,C', 186: 'RES 7,D', 187: 'RES 7,E', 188: 'RES 7,H', 189: 'RES 7,L', 190: 'RES 7,[HL]', 191: 'RES 7,A', 192: 'SET 0,B', 193: 'SET 0,C', 194: 'SET 0,D', 195: 'SET 0,E', 196: 'SET 0,H', 197: 'SET 0,L', 198: 'SET 0,[HL]', 199: 'SET 0,A', 200: 'SET 1,B', 201: 'SET 1,C', 202: 'SET 1,D', 203: 'SET 1,E', 204: 'SET 1,H', 205: 'SET 1,L', 206: 'SET 1,[HL]', 207: 'SET 1,A', 208: 'SET 2,B', 209: 'SET 2,C', 210: 'SET 2,D', 211: 'SET 2,E', 212: 'SET 2,H', 213: 'SET 2,L', 214: 'SET 2,[HL]', 215: 'SET 2,A', 216: 'SET 3,B', 217: 'SET 3,C', 218: 'SET 3,D', 219: 'SET 3,E', 220: 'SET 3,H', 221: 'SET 3,L', 222: 'SET 3,[HL]', 223: 'SET 3,A', 224: 'SET 4,B', 225: 'SET 4,C', 226: 'SET 4,D', 227: 'SET 4,E', 228: 'SET 4,H', 229: 'SET 4,L', 230: 'SET 4,[HL]', 231: 'SET 4,A', 232: 'SET 5,B', 233: 'SET 5,C', 234: 'SET 5,D', 235: 'SET 5,E', 236: 'SET 5,H', 237: 'SET 5,L', 238: 'SET 5,[HL]', 239: 'SET 5,A', 240: 'SET 6,B', 241: 'SET 6,C', 242: 'SET 6,D', 243: 'SET 6,E', 244: 'SET 6,H', 245: 'SET 6,L', 246: 'SET 6,[HL]', 247: 'SET 6,A', 248: 'SET 7,B', 249: 'SET 7,C', 250: 'SET 7,D', 251: 'SET 7,E', 252: 'SET 7,H', 253: 'SET 7,L', 254: 'SET 7,[HL]', 255: 'SET 7,A'};
 
 export const jumpInstructions = {
-  0x18: {},
-  0xC3: {},
-  0x20: {},
-  0xC2: {},
-  0x38: {},
-  0x28: {},
-  0x30: {},
-  0xCA: {},
-  0xD2: {},
-  0xDA: {},
-  0xE9: {}
+  0x18: {conditional: false},
+  0xC3: {conditional: false},
+  0x20: {conditional: true},
+  0xC2: {conditional: true},
+  0x38: {conditional: true},
+  0x28: {conditional: true},
+  0x30: {conditional: true},
+  0xCA: {conditional: true},
+  0xD2: {conditional: true},
+  0xDA: {conditional: true},
+  0xE9: {conditional: true}
 };
 
 export const callInstructions = {
