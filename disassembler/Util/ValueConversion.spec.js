@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import { describe, it } from 'mocha';
-import {convertTo8BitSignedValue, convertToHex, is8BitSignedValueNegative, convertHexStringToNumber} from '../Util/ValueConversion';
+import {convertTo8CharacterHexAddress, convertTo8BitSignedValue, convertToHex, is8BitSignedValueNegative, convertHexStringToNumber} from '../Util/ValueConversion';
 
 describe('Utility functions', function () {
   //
@@ -33,7 +33,9 @@ describe('Utility functions', function () {
     const result = convertHexStringToNumber('FFFF');
     assert.deepEqual(result, 65535);
   });
+});
 
+describe('Converting to Signed Values', function () {
   //
   // Test converting to signed values
   //
@@ -55,5 +57,17 @@ describe('Utility functions', function () {
   it('should be able to convert to positive 8Bit Signed Value', function () {
     const result = convertTo8BitSignedValue(12);
     assert.equal(result, 12);
+  });
+});
+
+describe('Formatting functions', function () {
+  it('should be able to format 12 to 0000000c', function () {
+    const result = convertTo8CharacterHexAddress(12);
+    assert.equal(result, '0000000c');
+  });
+
+  it('should be able to format 6 to 00000006', function () {
+    const result = convertTo8CharacterHexAddress('6');
+    assert.equal(result, '00000006');
   });
 });

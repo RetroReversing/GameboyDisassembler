@@ -1,6 +1,8 @@
 import {parseInstruction} from './instructionParsing/instructionParsing';
 import {reduceBytesToDisassembleIntoInstructionGroupData} from '../linearSweepDisassembler/LinearSweepDisassembler';
-import {reduce, map} from 'lodash';
+import {reduce, map, isUndefined} from 'lodash';
+import {convertTo8CharacterHexAddress, convertTo2CharacterHexAddress, hexToNumber} from '../Util/ValueConversion';
+
 /**
  * Disassemble Bytes by executing all jumps, ignoring data, if you don't have data bytes use DisassembleBytesWithRecursiveTraversal
  *
@@ -19,6 +21,41 @@ export function DisassembleBytesWithRecursiveTraversalIntoOptimizedArray (bytesT
   const arrayOfJustInstructions = map(resultingInstructionMap, (value, key) => [value, key.replace('$', '')]);
   const sortedArrayByAddress = arrayOfJustInstructions.sort((a, b) => parseInt(a[1], 16) - parseInt(b[1], 16));
   return reduceInstructionCount(sortedArrayByAddress);
+}
+
+export function DisassembleBytesWithRecursiveTraversalFormatted (bytesToDisassemble, startAddress = 0x100) {
+  const groupsOfInstructions = reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble);
+  const resultingInstructionMap = disassembleLoop(startAddress, groupsOfInstructions, []);
+  return formatIntoGBDisBinaryFormat(resultingInstructionMap.allAssemblyInstructions, groupsOfInstructions);
+}
+
+const spacesBasedOnInstructionLength = {1: '           ', 2: '      ', 3: ' '};
+
+function getFullAddress (originalHexAddress) {
+  const hexAddressWithoutPrefix = originalHexAddress.replace('$', '');
+  return '[0x' + convertTo8CharacterHexAddress(hexAddressWithoutPrefix) + '] ';
+}
+
+function convertInstructionBytesToHexString (formattedString, value, index, collection) {
+  if (index !== 0) formattedString += ' ';
+  return formattedString + '0x' + convertTo2CharacterHexAddress(value).toUpperCase();
+}
+
+function getHexBytesForInstruction (originalHexAddress, groupsOfInstructions) {
+  const hexAddressWithoutPrefix = originalHexAddress.replace('$', '');
+  const instructionBytes = groupsOfInstructions.instructions[hexToNumber(hexAddressWithoutPrefix)];
+  if (isUndefined(instructionBytes)) {
+    return 'Error Fetching Hex String:' + originalHexAddress + ' ' + hexToNumber(hexAddressWithoutPrefix);
+  }
+  const formattedHexBytes = reduce(instructionBytes, convertInstructionBytesToHexString, '');
+  return formattedHexBytes + spacesBasedOnInstructionLength[instructionBytes.length];
+}
+
+export function formatIntoGBDisBinaryFormat (mapOfInstructions, groupsOfInstructions) {
+  const formattedMapOfInstructions = map(mapOfInstructions, function formatInstruction (instructionArray, address) {
+    return getFullAddress(address) + getHexBytesForInstruction(address, groupsOfInstructions) + ' ' + instructionArray;
+  });
+  return formattedMapOfInstructions;
 }
 
 let visitedLocations = {};

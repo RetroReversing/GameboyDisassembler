@@ -1,4 +1,4 @@
-import {DisassembleBytesWithRecursiveTraversalIntoOptimizedArray} from '../../disassembler/recursiveTraversalDisassembler/RecursiveTraversalDisassembler';
+import {DisassembleBytesWithRecursiveTraversalIntoOptimizedArray, DisassembleBytesWithRecursiveTraversalFormatted} from '../../disassembler/recursiveTraversalDisassembler/RecursiveTraversalDisassembler';
 import * as assert from 'assert';
 import {describe, it, before, beforeEach} from 'mocha';
 import * as fs from 'fs';
@@ -18,7 +18,7 @@ beforeEach(function () {
 describe('Integration tests for Smarter disassembling of Helicoper.js', function () {
   it('should generate assembly output for helicopter.gb with traversal', function () {
     var romData = fs.readFileSync('./roms/helicopter/helicopter.gb');
-    const resultingAssembly = DisassembleBytesWithRecursiveTraversalIntoOptimizedArray(romData).join('\n');
+    const resultingAssembly = DisassembleBytesWithRecursiveTraversalFormatted(romData, 0x100);
     expect(resultingAssembly).to.matchSnapshot();
   });
 });

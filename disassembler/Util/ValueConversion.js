@@ -19,3 +19,20 @@ export function convertToHex (value, prefix = '$') {
 export function convertHexStringToNumber (hexString) {
   return parseInt(hexString, 16);
 }
+
+export function convertTo8CharacterHexAddress (hexAddressWithoutPrefix) {
+  return toPaddedHexString(8, hexAddressWithoutPrefix);
+}
+
+export function convertTo2CharacterHexAddress (hexAddressWithoutPrefix) {
+  return toPaddedHexString(2, hexAddressWithoutPrefix);
+}
+
+function toPaddedHexString (len, num) {
+  const str = num.toString(16);
+  return '0'.repeat(len - str.length) + str;
+}
+
+export function hexToNumber (hexStringWithoutPrefix) {
+  return parseInt(hexStringWithoutPrefix, 16);
+}
