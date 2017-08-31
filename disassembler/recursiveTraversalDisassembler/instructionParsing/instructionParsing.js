@@ -1,6 +1,6 @@
 import {isJumpInstruction, isCallInstruction, isRetInstruction, isJumpConditionalInstruction, isRetConditionalInstruction} from '../../disassemblerInstructions';
 import {DisassembleBytesWithLinearSweep} from '../../linearSweepDisassembler/LinearSweepDisassembler';
-import {convertTo8BitSignedValue, convertHexStringToNumber, convertToHex} from '../../Util/ValueConversion';
+import {convertTo8BitSignedValue, convertHexStringToNumber, convertTo8CharacterHexAddress} from '../../Util/ValueConversion';
 
 function addAdditionalTraversalPath (state, instruction) {
   state.additionalPaths.push(state.pc + instruction.length);
@@ -55,7 +55,7 @@ export function parseInstruction (instruction, state) {
   //
   // Here pc is pointing to the first instruction in this opcode
   //
-  const instructionPCAddress = convertToHex(state.pc);
+  const instructionPCAddress = convertTo8CharacterHexAddress(state.pc);
   state.allAssemblyInstructions[instructionPCAddress] = DisassembleBytesWithLinearSweep(instruction);
   // now calculate jumps etc
   const programCounterForThisInstruction = state.pc;

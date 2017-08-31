@@ -48,10 +48,8 @@ function disassembleLoop (startAddress, groupsOfInstructions, addressesToJumpTo)
   resetVisitedAddresses();
   addressesToJumpTo.push(startAddress);
   let state = {pc: startAddress, jumpAddresses: [startAddress], jumpAssemblyInstructions: {}, allAssemblyInstructions: {}, callStack: [], additionalPaths: []};
-  // let maxLoops = 1000;
   let currentLoop = 0;
   while (true) {
-    // Why do we have to subtract 1 to programcounter to get the correct result?
     const instruction = groupsOfInstructions.instructions[state.pc];
     if (!instruction || hasAlreadyVisited(state)) {
       if (state.additionalPaths.length === 0) break;
@@ -60,7 +58,6 @@ function disassembleLoop (startAddress, groupsOfInstructions, addressesToJumpTo)
     }
     state = parseInstruction(instruction, state);
     currentLoop++;
-    // if (hasAlreadyVisited(state) || currentLoop > maxLoops) { break; }
   }
   return state;
 }

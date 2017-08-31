@@ -31,10 +31,10 @@ describe('Integration tests for Proper Traversal dissassembler', function () {
   it('should disassemble the start address', function () {
     var romData = fs.readFileSync('./roms/helicopter/helicopter.gb');
     const resultingAssembly = DisassembleBytesWithRecursiveTraversal(romData).allAssemblyInstructions;
-    assert.deepEqual(resultingAssembly['$100'], ['NOP']);
-    assert.deepEqual(resultingAssembly['$101'], ['JP $150']);
-    assert.deepEqual(resultingAssembly['$150'], ['NOP']);
-    assert.deepEqual(resultingAssembly['$151'], ['DI']);
+    assert.deepEqual(resultingAssembly['00000100'], ['NOP']);
+    assert.deepEqual(resultingAssembly['00000101'], ['JP $150']);
+    assert.deepEqual(resultingAssembly['00000150'], ['NOP']);
+    assert.deepEqual(resultingAssembly['00000151'], ['DI']);
   });
 
   it('should return a list of jump instructions in a rom', function () {
@@ -59,6 +59,6 @@ describe('Integration tests for Proper Traversal dissassembler', function () {
   it('should return a list of all assembly instructions currently disassembled', function () {
     const romData = fs.readFileSync('./roms/helicopter/helicopter.gb');
     const result = DisassembleBytesWithRecursiveTraversal(romData, 0x100).allAssemblyInstructions;
-    assert.deepEqual(result['$100'], ['NOP']);
+    assert.deepEqual(result['00000100'], ['NOP']);
   });
 });
