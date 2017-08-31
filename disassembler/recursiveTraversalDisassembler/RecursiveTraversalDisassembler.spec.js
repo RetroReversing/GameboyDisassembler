@@ -66,7 +66,7 @@ describe('RecursiveTraversalDisassembler Jump tests :: ', function () {
   });
 });
 
-describe('RecursiveTraversalDisassembler Formatting output tests :: ', function () {
+describe('RecursiveTraversalDisassembler Formatting output tests', function () {
   it('should format into gbdis standard format', function () {
     const testInstructions = [0x04, 0x0C, 0x28, 0x01, 0x22, 0x0D];
     const resultingState = DisassembleBytesWithRecursiveTraversalFormatted(testInstructions, 0x00);
@@ -75,7 +75,7 @@ describe('RecursiveTraversalDisassembler Formatting output tests :: ', function 
 `[0x00000000] 0x04            INC B
 [0x00000001] 0x0C            INC C
 [0x00000002] 0x28 0x01       JR Z, $1
-[0x00000005] 0x0D            DEC C
-[0x00000004] 0x22            LD [HLI],A`);
+[0x00000004] 0x22            LD [HLI],A
+[0x00000005] 0x0D            DEC C`);
   });
 });

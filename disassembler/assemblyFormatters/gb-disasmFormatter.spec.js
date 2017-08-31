@@ -1,8 +1,8 @@
 import * as assert from 'assert';
 import { describe, it } from 'mocha';
-import {formatIntoGBDisBinaryFormat, getFullAddress} from '../assemblyFormatters/gb-disasmFormatter';
+import {formatIntoGBDisBinaryFormat, getFullAddress, sortMapOfInstructions} from '../assemblyFormatters/gb-disasmFormatter';
 
-describe('gb-disasm Formatting output tests :: ', function () {
+describe('gb-disasm Formatting output tests', function () {
   it('formatIntoGBDisBinaryFormat should format into gbdis standard format', function () {
     const testInstructions = { '$0': [ 'INC B' ],
       '$1': [ 'INC C' ],
@@ -24,12 +24,26 @@ describe('gb-disasm Formatting output tests :: ', function () {
 `[0x00000000] 0x04            INC B
 [0x00000001] 0x0C            INC C
 [0x00000002] 0x28 0x01       JR Z, $1
-[0x00000005] 0x00            NOP
-[0x00000004] 0x22            LD [HLI],A`);
+[0x00000004] 0x22            LD [HLI],A
+[0x00000005] 0x00            NOP`);
+  });
+
+  it('should sort instructions by the address they are in rom', function () {
+    const unOrderedMapOfInstructions = { '$0': [ 'INC B' ],
+      '$1': [ 'INC C' ],
+      '$6': [ 'JR Z, $1' ],
+      '$4': [ 'DEC C' ],
+      '$2': [ 'LD [HLI],A' ] };
+    const orderedMapOfInstructions = sortMapOfInstructions(unOrderedMapOfInstructions);
+    assert.deepEqual(orderedMapOfInstructions, { '$0': [ 'INC B' ],
+      '$1': [ 'INC C' ],
+      '$2': [ 'LD [HLI],A' ],
+      '$4': [ 'DEC C' ],
+      '$6': [ 'JR Z, $1' ] });
   });
 });
 
-describe('gb-disasm Formatting utility function tests :: ', function () {
+describe('gb-disasm Formatting utility function tests', function () {
   it('formatIntoGBDisBinaryFormat should format addresses into format [0x00000000]', function () {
     const result = getFullAddress('$01');
     assert.equal(result, '[0x00000001]');

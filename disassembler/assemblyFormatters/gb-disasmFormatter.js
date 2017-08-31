@@ -2,10 +2,19 @@ import {reduce, map, isUndefined} from 'lodash';
 import {convertTo8CharacterHexAddress, convertTo2CharacterHexAddress, hexToNumber} from '../Util/ValueConversion';
 
 export function formatIntoGBDisBinaryFormat (mapOfInstructions, groupsOfInstructions) {
-  const formattedMapOfInstructions = map(mapOfInstructions, function formatInstruction (instructionArray, address) {
+  const sortedMapOfInstructions = sortMapOfInstructions(mapOfInstructions);
+  const formattedMapOfInstructions = map(sortedMapOfInstructions, function formatInstruction (instructionArray, address) {
     return getFullAddress(address) + ' ' + getHexBytesForInstruction(address, groupsOfInstructions) + ' ' + instructionArray;
   });
   return formattedMapOfInstructions;
+}
+
+export function sortMapOfInstructions (mapOfInstructions) {
+  const orderedMapOfInstructions = {};
+  Object.keys(mapOfInstructions).sort().forEach(function (key) {
+    orderedMapOfInstructions[key] = mapOfInstructions[key];
+  });
+  return orderedMapOfInstructions;
 }
 
 const spacesBasedOnInstructionLength = {1: '           ', 2: '      ', 3: ' '};
