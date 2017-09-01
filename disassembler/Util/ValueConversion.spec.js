@@ -61,9 +61,9 @@ describe('Converting to Signed Values', function () {
 });
 
 describe('Formatting functions', function () {
-  it('should be able to format 12 to 0000000c', function () {
+  it('should be able to format 12 to 0000000C', function () {
     const result = convertTo8CharacterHexAddress(12);
-    assert.equal(result, '0000000c');
+    assert.equal(result, '0000000C');
   });
 
   it('should be able to format 6 to 00000006', function () {

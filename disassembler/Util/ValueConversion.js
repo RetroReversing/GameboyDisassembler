@@ -29,8 +29,13 @@ export function convertTo2CharacterHexAddress (hexAddressWithoutPrefix) {
 }
 
 function toPaddedHexString (len, num) {
-  const str = num.toString(16);
-  return '0'.repeat(len - str.length) + str;
+  const str = num.toString(16).toUpperCase();
+  const requiredNumberOfZeros = len - str.length;
+  if (requiredNumberOfZeros < 0) {
+    console.error('Invalid requiredNumberOfZeros in toPaddedHexString:', str, 'desired Length:', len, 'original number:', num);
+    return str;
+  }
+  return '0'.repeat(requiredNumberOfZeros) + str;
 }
 
 export function hexToNumber (hexStringWithoutPrefix) {

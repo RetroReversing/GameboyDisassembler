@@ -1,7 +1,8 @@
 import {oneByteInstructions, twoByteInstructions, threeByteInstructions, cbPrefixedOps} from '../disassemblerInstructions';
-import {convertToHex} from '../Util/ValueConversion';
-const _ = require('lodash');
+import {convertToHex, convertTo2CharacterHexAddress} from '../Util/ValueConversion';
+import {template, reduce, templateSettings, includes} from 'lodash';
 const { Seq } = require('immutable');
+templateSettings.interpolate = /{{([\s\S]+?)}}/g;
 
 /**
  * Disassembles a single instruction (opcode + operands)
@@ -43,15 +44,29 @@ function handleCBPrefixedInstructions (CBByte, actualInstruction) {
 }
 
 function handleTwoByteInstructions (byteValue, operandByte) {
-  const instruction = twoByteInstructions[byteValue];
-  const operand = convertToHex(operandByte);
-  return instruction + ' ' + operand;
+  const instructionString = twoByteInstructions[byteValue];
+  const operand = '$' + convertTo2CharacterHexAddress(operandByte);
+  if (includes(instructionString, '{{op1}}')) {
+    return handleTemplatizedInstruction(instructionString, operand);
+  }
+  return instructionString + ' ' + operand;
 }
 
+// TODO need to handle special case for brackets and suffix
 function handleThreeByteInstructions (byteValue, operandByte1, operandByte2) {
-  const instruction = threeByteInstructions[byteValue];
-  const operand = convertToHex(operandByte2) + convertToHex(operandByte1, '');
-  return instruction + ' ' + operand;
+  const instructionString = threeByteInstructions[byteValue];
+
+  const operand = '$' + convertTo2CharacterHexAddress(operandByte2) + convertTo2CharacterHexAddress(operandByte1);
+  if (includes(instructionString, '{{op1}}')) {
+    return handleTemplatizedInstruction(instructionString, operand);
+  }
+  return instructionString + ' ' + operand;
+}
+
+function handleTemplatizedInstruction (instructionString, operand) {
+  const instructionTemplateFunction = template(instructionString);
+  const instruction = instructionTemplateFunction({op1: operand});
+  return instruction;
 }
 
 function handleOpcode (value, assemblyInstructions, addressOfOpcode) {
@@ -77,7 +92,7 @@ export function joinOpcodesAndOperands (assemblyInstructions, value, index, coll
 }
 
 export function reduceBytesToDisassembleIntoInstructionGroupData (bytesToDisassemble) {
-  return _.reduce(bytesToDisassemble, joinOpcodesAndOperands, {instructions: {}, skipBytes: 0, keys: []});
+  return reduce(bytesToDisassemble, joinOpcodesAndOperands, {instructions: {}, skipBytes: 0, keys: []});
 }
 
 function reduceBytesToDisassembleIntoInstructionGroups (bytesToDisassemble) {

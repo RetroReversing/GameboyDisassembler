@@ -59,3 +59,14 @@ describe('Disassemble Rom with LinearSweep', function () {
     assert.deepEqual(instructionResult, { instructions: {0: [24]}, skipBytes: 1, 'lastAddedInstruction': 0, 'keys': [0] });
   });
 });
+
+describe('should be able to support addresses that need to be put in [] with LinearSweep', function () {
+  it('should be able to support LD A,[$C0A1]', function () {
+    const resultingAssembly = DisassembleBytesWithLinearSweep([0xFA, 0xA1, 0xC0]);
+    assert.deepEqual(resultingAssembly, ['LD A,[$C0A1]']);
+  });
+  it('should be able to support LD [$C0A1],A', function () {
+    const resultingAssembly = DisassembleBytesWithLinearSweep([0xEA, 0xA1, 0xC0]);
+    assert.deepEqual(resultingAssembly, ['LD [$C0A1],A']);
+  });
+});

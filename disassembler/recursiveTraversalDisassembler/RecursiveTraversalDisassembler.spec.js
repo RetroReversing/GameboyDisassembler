@@ -55,14 +55,14 @@ describe('RecursiveTraversalDisassembler Jump tests :: ', function () {
     assert.deepEqual(resultingState.allAssemblyInstructions,
       { '00000000': [ 'INC B' ],
         '00000001': [ 'INC C' ],
-        '00000002': [ 'JR Z, $1' ],
+        '00000002': [ 'JR Z, $01' ],
         '00000004': [ 'LD [HLI],A' ],
         '00000005': [ 'DEC C' ] });
   });
 
   it('should not parse bytes after unconditional Jump', function () {
     const resultState = DisassembleBytesWithRecursiveTraversal([0x18, 0x01, 0x05, 0x00], 0x00);
-    assert.deepEqual(resultState.allAssemblyInstructions, { '00000000': [ 'JR $1' ], '00000003': [ 'NOP' ] });
+    assert.deepEqual(resultState.allAssemblyInstructions, { '00000000': [ 'JR $01' ], '00000003': [ 'NOP' ] });
   });
 });
 
@@ -74,7 +74,7 @@ describe('RecursiveTraversalDisassembler Formatting output tests', function () {
     assert.deepEqual(outputAsString,
 `[0x00000000] 0x04            INC B
 [0x00000001] 0x0C            INC C
-[0x00000002] 0x28 0x01       JR Z, $1
+[0x00000002] 0x28 0x01       JR Z, $01
 [0x00000004] 0x22            LD [HLI],A
 [0x00000005] 0x0D            DEC C`);
   });
