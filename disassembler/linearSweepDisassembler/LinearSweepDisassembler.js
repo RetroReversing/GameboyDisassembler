@@ -49,10 +49,14 @@ function handleTwoByteInstructions (byteValue, operandByte) {
   if (includes(instructionString, '{{op1}}')) {
     return handleTemplatizedInstruction(instructionString, operand);
   }
-  return instructionString + ' ' + operand;
+  return formatSpacesBetweenOpcodeAndOperandStrings(instructionString, operand);
 }
 
-// TODO need to handle special case for brackets and suffix
+function formatSpacesBetweenOpcodeAndOperandStrings (opcodeString, operandString, spacesBetween = 1) {
+  if (opcodeString.slice(-1) === ',') { return opcodeString + operandString; }
+  return opcodeString + ' '.repeat(spacesBetween) + operandString;
+}
+
 function handleThreeByteInstructions (byteValue, operandByte1, operandByte2) {
   const instructionString = threeByteInstructions[byteValue];
 
@@ -60,7 +64,7 @@ function handleThreeByteInstructions (byteValue, operandByte1, operandByte2) {
   if (includes(instructionString, '{{op1}}')) {
     return handleTemplatizedInstruction(instructionString, operand);
   }
-  return instructionString + ' ' + operand;
+  return formatSpacesBetweenOpcodeAndOperandStrings(instructionString, operand);
 }
 
 function handleTemplatizedInstruction (instructionString, operand) {

@@ -4,7 +4,7 @@ import {convertTo8CharacterHexAddress, convertTo2CharacterHexAddress, hexToNumbe
 export function formatIntoGBDisBinaryFormat (mapOfInstructions, groupsOfInstructions) {
   const sortedMapOfInstructions = sortMapOfInstructions(mapOfInstructions);
   const formattedMapOfInstructions = map(sortedMapOfInstructions, function formatInstruction (instructionArray, address) {
-    return getFullAddress(address) + ' ' + getHexBytesForInstruction(address, groupsOfInstructions) + ' ' + instructionArray;
+    return getFullAddress(address) + ' ' + getHexBytesForInstruction(address, groupsOfInstructions) + instructionArray;
   });
   return formattedMapOfInstructions;
 }

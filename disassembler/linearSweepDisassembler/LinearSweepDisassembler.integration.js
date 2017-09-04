@@ -16,12 +16,12 @@ instructionTests.push({
     'ADC A,[HL]',
     'DAA',
     'LD [HLI],A',
-    'LD A, $00',
+    'LD A,$00',
     'ADC A,[HL]',
     'DAA',
     'LD [HL],A',
-    'LD A, $01',
-    'LDH [$E0]']
+    'LD A,$01',
+    'LDH [$E0],A']
 });
 
 describe('Integration tests for Disassembling Roms with LinearSweep', function () {

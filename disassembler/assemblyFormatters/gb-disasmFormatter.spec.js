@@ -21,11 +21,11 @@ describe('gb-disasm Formatting output tests', function () {
     const resultingState = formatIntoGBDisBinaryFormat(testInstructions, groupsOfInstructions);
     const outputAsString = resultingState.join('\n');
     assert.deepEqual(outputAsString,
-`[0x00000000] 0x04            INC B
-[0x00000001] 0x0C            INC C
-[0x00000002] 0x28 0x01       JR Z, $1
-[0x00000004] 0x22            LD [HLI],A
-[0x00000005] 0x00            NOP`);
+`[0x00000000] 0x04           INC B
+[0x00000001] 0x0C           INC C
+[0x00000002] 0x28 0x01      JR Z, $1
+[0x00000004] 0x22           LD [HLI],A
+[0x00000005] 0x00           NOP`);
   });
 
   it('should sort instructions by the address they are in rom', function () {
