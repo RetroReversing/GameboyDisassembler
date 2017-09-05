@@ -6,7 +6,7 @@ export function is8BitSignedValueNegative (signed8bitValue) {
 
 export function convertTo8BitSignedValue (value) {
   if (is8BitSignedValueNegative(value)) {
-    return -(value & 0x7F);
+    return (value - 256);
   }
   return value;
 }

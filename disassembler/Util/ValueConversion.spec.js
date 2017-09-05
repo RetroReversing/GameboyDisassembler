@@ -51,12 +51,17 @@ describe('Converting to Signed Values', function () {
 
   it('should be able to convert to negative 8Bit Signed Value', function () {
     const result = convertTo8BitSignedValue(129);
-    assert.equal(result, -1);
+    assert.equal(result, -127);
   });
 
   it('should be able to convert to positive 8Bit Signed Value', function () {
     const result = convertTo8BitSignedValue(12);
     assert.equal(result, 12);
+  });
+
+  it('should be able to convert to negative 8Bit Signed Value (0xFA)', function () {
+    const result = convertTo8BitSignedValue(0xFA);
+    assert.equal(result, -6);
   });
 });
 
