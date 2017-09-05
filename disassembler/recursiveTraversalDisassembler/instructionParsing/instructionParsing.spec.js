@@ -4,7 +4,7 @@ import { describe, it, beforeEach } from 'mocha';
 
 var blankState;
 beforeEach(function () {
-  blankState = {callStack: [0x100], jumpAssemblyInstructions: {}, additionalPaths: [], jumpAddresses: [], pc: 0x00};
+  blankState = {callStack: [0x100], jumpAssemblyInstructions: {}, additionalPaths: [], jumpAddresses: [], pc: 0x00, allAssemblyInstructions: {}};
 });
 
 describe('Instruction parsing', function () {
@@ -40,7 +40,13 @@ describe('Calculating jump location', function () {
   });
 
   it('should be able to support short jumps -2 bytes', function () {
-    const result = calculateJumpLocation([0x18, 130], {pc: 0x100});
+    const result = calculateJumpLocation([0x18, 0xFE], {pc: 0x100});
     assert.deepEqual(result, 254);
+  });
+
+  it('should be able to support short jumps by 0 bytes (jumps to next instruction)', function () {
+    const result = calculateJumpLocation([0x18, 0x00], {pc: 0x4A9});
+    assert.deepEqual(result, 0x4A9 + 2 + 0);
+    assert.deepEqual(result, 0x4AB);
   });
 });

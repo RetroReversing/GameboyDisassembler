@@ -1,6 +1,6 @@
 import {isJumpInstruction, isCallInstruction, isRetInstruction, isJumpConditionalInstruction, isRetConditionalInstruction} from '../../disassemblerInstructions';
 import {DisassembleBytesWithLinearSweep} from '../../linearSweepDisassembler/LinearSweepDisassembler';
-import {convertTo8BitSignedValue, convertHexStringToNumber, convertTo8CharacterHexAddress} from '../../Util/ValueConversion';
+import {convertToHex, convertTo8BitSignedValue, convertHexStringToNumber, convertTo8CharacterHexAddress} from '../../Util/ValueConversion';
 
 function addAdditionalTraversalPath (state, instruction) {
   state.additionalPaths.push(state.pc + instruction.length);
@@ -12,6 +12,11 @@ export function parseJumpInstruction (instruction, state) {
   const jumpDestination = calculateJumpLocation(instruction, state);
   state.jumpAddresses.push(jumpDestination);
   state.jumpAssemblyInstructions[state.pc] = DisassembleBytesWithLinearSweep(instruction);
+  let comments = '';
+  if (isRelativeJump(instruction)) {
+    comments = ' ; ' + convertToHex(jumpDestination, '0x');
+  }
+  state = saveDisassemblyInformationForAddress(instruction, state, comments);
   if (isJumpConditionalInstruction(instruction)) {
     addAdditionalTraversalPath(state, instruction);
   }
@@ -41,6 +46,15 @@ export function parseRetInstruction (instruction, state) {
   return state;
 }
 
+function saveDisassemblyInformationForAddress (instruction, state, comments = '') {
+  //
+  // Here pc is pointing to the first instruction in this opcode
+  //
+  const instructionPCAddress = convertTo8CharacterHexAddress(state.pc);
+  state.allAssemblyInstructions[instructionPCAddress] = DisassembleBytesWithLinearSweep(instruction) + comments;
+  return state;
+}
+
 /**
  *
  *
@@ -55,8 +69,7 @@ export function parseInstruction (instruction, state) {
   //
   // Here pc is pointing to the first instruction in this opcode
   //
-  const instructionPCAddress = convertTo8CharacterHexAddress(state.pc);
-  state.allAssemblyInstructions[instructionPCAddress] = DisassembleBytesWithLinearSweep(instruction);
+  state = saveDisassemblyInformationForAddress(instruction, state);
   // now calculate jumps etc
   const programCounterForThisInstruction = state.pc;
   state = parseJumpInstruction(instruction, state);
@@ -80,8 +93,13 @@ function gotoNextInstructionLocation (state, instruction) {
   return state;
 }
 
+function isRelativeJump (instruction) {
+  if (instruction.length === 2) return true;
+  return false;
+}
+
 export function calculateJumpLocation (instruction, state) {
-  if (instruction.length === 3) {
+  if (!isRelativeJump(instruction)) {
     const hexString = instruction[2].toString(16) + '' + instruction[1].toString(16);
     return convertHexStringToNumber(hexString);
   }
@@ -89,6 +107,6 @@ export function calculateJumpLocation (instruction, state) {
   // This presumes the current pc points to the first byte in this instruction
   //
   const signedValueOfRelativeJump = convertTo8BitSignedValue(instruction[1]);
-  if (signedValueOfRelativeJump > 0) { return state.pc + (instruction.length) + signedValueOfRelativeJump; }
+  if (signedValueOfRelativeJump >= 0) { return state.pc + (instruction.length) + signedValueOfRelativeJump; }
   return state.pc + signedValueOfRelativeJump;
 }
