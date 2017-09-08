@@ -1,3 +1,4 @@
+import {logError} from './Logger';
 
 export function is8BitSignedValueNegative (signed8bitValue) {
   if ((signed8bitValue & 0x80) === 128) return true;
@@ -29,10 +30,14 @@ export function convertTo2CharacterHexAddress (hexAddressWithoutPrefix) {
 }
 
 function toPaddedHexString (len, num) {
-  const str = num.toString(16).toUpperCase();
+  if (typeof (num) === 'undefined') {
+    logError('toPaddedHexString number was not valid:' + num + ' ' + len);
+    num = 0;
+  }
+  const str = (num).toString(16).toUpperCase();
   const requiredNumberOfZeros = len - str.length;
   if (requiredNumberOfZeros < 0) {
-    console.error('Invalid requiredNumberOfZeros in toPaddedHexString:', str, 'desired Length:', len, 'original number:', num);
+    logError('Invalid requiredNumberOfZeros in toPaddedHexString:' + str + ' Desired Length:' + len + ' Original number:' + num);
     return str;
   }
   return '0'.repeat(requiredNumberOfZeros) + str;

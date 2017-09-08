@@ -65,6 +65,18 @@ describe('RecursiveTraversalDisassembler Jump tests :: ', function () {
     const resultState = DisassembleBytesWithRecursiveTraversal([0x18, 0x01, 0x05, 0x00], 0x00);
     assert.deepEqual(resultState.allAssemblyInstructions, { '00000000': 'JR $01 ; 0x3', '00000003': 'NOP' });
   });
+
+  it('should not just exit because it has been to the called instruction before', function () {
+    const resultState = DisassembleBytesWithRecursiveTraversal([0x00, 0xCD, 0x08, 0x00, 0xCD, 0x08, 0x00, 0x00, 0xC9, 0x00], 0x00, true);
+    assert.deepEqual(resultState.allAssemblyInstructions, { '00000000': 'NOP',
+      '00000001': 'CALL $0008',
+      '00000004': 'CALL $0008',
+      '00000007': 'NOP',
+      '00000008': 'RET' });
+  });
+
+  // [0x00000412] 0xCD 0x8B 0x00 CALL $008B
+  //
 });
 
 describe('RecursiveTraversalDisassembler Formatting output tests', function () {

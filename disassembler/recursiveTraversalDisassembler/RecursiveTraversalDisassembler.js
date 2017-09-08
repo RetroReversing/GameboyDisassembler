@@ -2,6 +2,8 @@ import {parseInstruction} from './instructionParsing/instructionParsing';
 import {reduceBytesToDisassembleIntoInstructionGroupData} from '../linearSweepDisassembler/LinearSweepDisassembler';
 import {reduce, map} from 'lodash';
 import {formatIntoGBDisBinaryFormat} from '../assemblyFormatters/gb-disasmFormatter';
+import {convertTo8CharacterHexAddress} from '../Util/ValueConversion';
+import {logAction} from '../Util/Logger';
 
 /**
  * Disassemble Bytes by executing all jumps, ignoring data, if you don't have data bytes use DisassembleBytesWithRecursiveTraversal
@@ -10,22 +12,22 @@ import {formatIntoGBDisBinaryFormat} from '../assemblyFormatters/gb-disasmFormat
  * @param {any} bytesToDisassemble
  * @returns
  */
-export function DisassembleBytesWithRecursiveTraversal (bytesToDisassemble, startAddress = 0x100) {
+export function DisassembleBytesWithRecursiveTraversal (bytesToDisassemble, startAddress = 0x100, allowLogging = false) {
   const groupsOfInstructions = reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble);
-  return disassembleLoop(startAddress, groupsOfInstructions, []);
+  return disassembleLoop(startAddress, groupsOfInstructions, [], allowLogging);
 }
 
-export function DisassembleBytesWithRecursiveTraversalIntoOptimizedArray (bytesToDisassemble, startAddress = 0x100) {
+export function DisassembleBytesWithRecursiveTraversalIntoOptimizedArray (bytesToDisassemble, startAddress = 0x100, allowLogging = false) {
   const groupsOfInstructions = reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble);
-  const resultingInstructionMap = disassembleLoop(startAddress, groupsOfInstructions, []).allAssemblyInstructions;
+  const resultingInstructionMap = disassembleLoop(startAddress, groupsOfInstructions, [], allowLogging).allAssemblyInstructions;
   const arrayOfJustInstructions = map(resultingInstructionMap, (value, key) => [value, key.replace('$', '')]);
   const sortedArrayByAddress = arrayOfJustInstructions.sort((a, b) => parseInt(a[1], 16) - parseInt(b[1], 16));
   return reduceInstructionCount(sortedArrayByAddress);
 }
 
-export function DisassembleBytesWithRecursiveTraversalFormatted (bytesToDisassemble, startAddress = 0x100) {
+export function DisassembleBytesWithRecursiveTraversalFormatted (bytesToDisassemble, startAddress = 0x100, allowLogging = false) {
   const groupsOfInstructions = reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble);
-  const resultingInstructionMap = disassembleLoop(startAddress, groupsOfInstructions, []);
+  const resultingInstructionMap = disassembleLoop(startAddress, groupsOfInstructions, [], allowLogging);
   return formatIntoGBDisBinaryFormat(resultingInstructionMap.allAssemblyInstructions, groupsOfInstructions);
 }
 
@@ -35,8 +37,13 @@ export function hasAlreadyVisited (state) {
   if (visitedLocations[state.pc]) {
     return true;
   }
-  visitedLocations[state.pc] = state;
+
   return false;
+}
+
+export function markAddressAsVisited (state) {
+  logAction('Marking address as visited:', state);
+  visitedLocations[state.pc] = state;
 }
 
 function resetVisitedAddresses () {
@@ -44,18 +51,21 @@ function resetVisitedAddresses () {
   return visitedLocations;
 }
 
-function disassembleLoop (startAddress, groupsOfInstructions, addressesToJumpTo) {
+function disassembleLoop (startAddress, groupsOfInstructions, addressesToJumpTo, allowLogging = false) {
   resetVisitedAddresses();
   addressesToJumpTo.push(startAddress);
-  let state = {pc: startAddress, jumpAddresses: [startAddress], jumpAssemblyInstructions: {}, allAssemblyInstructions: {}, callStack: [], additionalPaths: []};
+  let state = {pc: startAddress, jumpAddresses: [startAddress], jumpAssemblyInstructions: {}, allAssemblyInstructions: {}, callStack: [], additionalPaths: [], allowLogging: allowLogging};
   let currentLoop = 0;
   while (true) {
     const instruction = groupsOfInstructions.instructions[state.pc];
     if (!instruction || hasAlreadyVisited(state)) {
       if (state.additionalPaths.length === 0) break;
+      const previousPC = state.pc;
       state.pc = state.additionalPaths.pop();
+      logAction('Going To additional path from:' + convertTo8CharacterHexAddress(previousPC) + ' To:' + convertTo8CharacterHexAddress(state.pc), state);
       continue;
     }
+    markAddressAsVisited(state);
     state = parseInstruction(instruction, state);
     currentLoop++;
   }

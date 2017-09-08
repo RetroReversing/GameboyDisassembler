@@ -1,6 +1,8 @@
 import {isJumpInstruction, isCallInstruction, isRetInstruction, isJumpConditionalInstruction, isRetConditionalInstruction} from '../../disassemblerInstructions';
 import {DisassembleBytesWithLinearSweep} from '../../linearSweepDisassembler/LinearSweepDisassembler';
 import {convertToHex, convertTo8BitSignedValue, convertHexStringToNumber, convertTo8CharacterHexAddress} from '../../Util/ValueConversion';
+import {logAction} from '../../Util/Logger';
+import {hasAlreadyVisited} from '../RecursiveTraversalDisassembler';
 
 function addAdditionalTraversalPath (state, instruction) {
   state.additionalPaths.push(state.pc + instruction.length);
@@ -24,9 +26,21 @@ export function parseJumpInstruction (instruction, state) {
   return state;
 }
 
-export function parseCallInstruction (instruction, state) {
-  if (!isCallInstruction(instruction)) return state;
-  const jumpDestination = calculateJumpLocation(instruction, state);
+function addUsageofAJumpableAddress (usedAddress, state) {
+  if (!state.usages) state.usages = {};
+  if (!state.usages[usedAddress]) state.usages[usedAddress] = [];
+  state.usages[usedAddress].push(state.pc);
+  return state;
+}
+
+function numberOfUsagesOfJumpableAddress (usedAddress, state) {
+  if (!state.usages) return 0;
+  if (!state.usages[usedAddress]) return 0;
+  return state.usages[usedAddress].length;
+}
+
+function handleNewJumpLocation (jumpDestination, instruction, state) {
+  logAction('New Jump Location:' + jumpDestination, state);
   state.jumpAddresses.push(jumpDestination);
   state.jumpAssemblyInstructions[state.pc] = DisassembleBytesWithLinearSweep(instruction);
   const jumpBackLocation = state.pc + instruction.length;
@@ -35,13 +49,28 @@ export function parseCallInstruction (instruction, state) {
   return state;
 }
 
+export function parseCallInstruction (instruction, state) {
+  if (!isCallInstruction(instruction)) return state;
+  const jumpDestination = calculateJumpLocation(instruction, state);
+  logAction('Call Instruction:' + jumpDestination, state);
+  state = addUsageofAJumpableAddress(jumpDestination, state);
+  if (numberOfUsagesOfJumpableAddress(jumpDestination, state) > 1) return state;
+  if (hasAlreadyVisited(jumpDestination)) return state;
+
+  state = handleNewJumpLocation(jumpDestination, instruction, state);
+  return state;
+}
+
 export function parseRetInstruction (instruction, state) {
   if (!isRetInstruction(instruction)) return state;
   const jumpDestination = state.callStack.pop();
+  logAction('RET to callstack:' + convertTo8CharacterHexAddress(jumpDestination), state);
   state.jumpAssemblyInstructions[state.pc] = DisassembleBytesWithLinearSweep(instruction);
   if (isRetConditionalInstruction(instruction)) {
+    logAction('Conditional RET', state);
     addAdditionalTraversalPath(state, instruction);
   }
+  state.nextAddress = jumpDestination;
   state.pc = jumpDestination;
   return state;
 }
@@ -107,6 +136,7 @@ export function calculateJumpLocation (instruction, state) {
   // This presumes the current pc points to the first byte in this instruction
   //
   const signedValueOfRelativeJump = convertTo8BitSignedValue(instruction[1]);
-  if (signedValueOfRelativeJump >= 0) { return state.pc + (instruction.length) + signedValueOfRelativeJump; }
-  return state.pc + signedValueOfRelativeJump;
+  const properProgramCounterAlwaysPointsToNextInstruction = state.pc + (instruction.length);
+  if (signedValueOfRelativeJump >= 0) { return properProgramCounterAlwaysPointsToNextInstruction + signedValueOfRelativeJump; }
+  return properProgramCounterAlwaysPointsToNextInstruction + signedValueOfRelativeJump;
 }
