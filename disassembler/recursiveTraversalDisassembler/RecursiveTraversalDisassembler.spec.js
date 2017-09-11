@@ -74,9 +74,6 @@ describe('RecursiveTraversalDisassembler Jump tests :: ', function () {
       '00000007': 'NOP',
       '00000008': 'RET' });
   });
-
-  // [0x00000412] 0xCD 0x8B 0x00 CALL $008B
-  //
 });
 
 describe('RecursiveTraversalDisassembler Formatting output tests', function () {

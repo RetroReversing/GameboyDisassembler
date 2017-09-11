@@ -1,6 +1,6 @@
 import {isJumpInstruction, isCallInstruction, isRetInstruction, isJumpConditionalInstruction, isRetConditionalInstruction} from '../../disassemblerInstructions';
 import {DisassembleBytesWithLinearSweep} from '../../linearSweepDisassembler/LinearSweepDisassembler';
-import {convertToHex, convertTo8BitSignedValue, convertHexStringToNumber, convertTo8CharacterHexAddress} from '../../Util/ValueConversion';
+import {convertToHex, convertTo2CharacterHexAddress, convertTo8BitSignedValue, convertHexStringToNumber, convertTo8CharacterHexAddress} from '../../Util/ValueConversion';
 import {logAction} from '../../Util/Logger';
 import {hasAlreadyVisited} from '../RecursiveTraversalDisassembler';
 
@@ -44,6 +44,7 @@ function handleNewJumpLocation (jumpDestination, instruction, state) {
   state.jumpAddresses.push(jumpDestination);
   state.jumpAssemblyInstructions[state.pc] = DisassembleBytesWithLinearSweep(instruction);
   const jumpBackLocation = state.pc + instruction.length;
+  logAction('Add To Callstack: jump back location:' + convertTo8CharacterHexAddress(jumpBackLocation), state);
   state.callStack.push(jumpBackLocation);
   state.pc = jumpDestination;
   return state;
@@ -52,7 +53,7 @@ function handleNewJumpLocation (jumpDestination, instruction, state) {
 export function parseCallInstruction (instruction, state) {
   if (!isCallInstruction(instruction)) return state;
   const jumpDestination = calculateJumpLocation(instruction, state);
-  logAction('Call Instruction:' + jumpDestination, state);
+  logAction('Call Instruction: Destination:' + convertTo8CharacterHexAddress(jumpDestination)+' '+instruction, state);
   state = addUsageofAJumpableAddress(jumpDestination, state);
   if (numberOfUsagesOfJumpableAddress(jumpDestination, state) > 1) return state;
   if (hasAlreadyVisited(jumpDestination)) return state;
@@ -129,7 +130,7 @@ function isRelativeJump (instruction) {
 
 export function calculateJumpLocation (instruction, state) {
   if (!isRelativeJump(instruction)) {
-    const hexString = instruction[2].toString(16) + '' + instruction[1].toString(16);
+    const hexString = convertTo2CharacterHexAddress(instruction[2]) + '' + convertTo2CharacterHexAddress(instruction[1]);
     return convertHexStringToNumber(hexString);
   }
   //

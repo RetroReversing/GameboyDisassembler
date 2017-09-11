@@ -61,4 +61,9 @@ describe('Calculating jump location', function () {
     assert.deepEqual(result, 0x078 + 2 - 9 );
     assert.deepEqual(result, 0x071);
   });
+
+  it('should be able to support Call instruction to 0x0307', function () {
+    const result = calculateJumpLocation([205, 7, 3], {pc: 0x0});
+    assert.deepEqual(result, 775);
+  });
 });
