@@ -2,3 +2,4 @@ node_modules
 **/output.txt
 dist
 *.generated.s
+*.log

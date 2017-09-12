@@ -4,6 +4,7 @@ import {reduce, map} from 'lodash';
 import {formatIntoGBDisBinaryFormat} from '../assemblyFormatters/gb-disasmFormatter';
 import {convertTo8CharacterHexAddress} from '../Util/ValueConversion';
 import {logAction} from '../Util/Logger';
+import {parseGBHeader, getRomTitle} from '../romInformation/romInformation';
 
 /**
  * Disassemble Bytes by executing all jumps, ignoring data, if you don't have data bytes use DisassembleBytesWithRecursiveTraversal
@@ -28,7 +29,30 @@ export function DisassembleBytesWithRecursiveTraversalIntoOptimizedArray (bytesT
 export function DisassembleBytesWithRecursiveTraversalFormatted (bytesToDisassemble, startAddress = 0x100, allowLogging = false) {
   const groupsOfInstructions = reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble);
   const resultingInstructionMap = disassembleLoop(startAddress, groupsOfInstructions, [], allowLogging);
-  return formatIntoGBDisBinaryFormat(resultingInstructionMap.allAssemblyInstructions, groupsOfInstructions);
+  const formattedMapOfInstructions = formatIntoGBDisBinaryFormat(resultingInstructionMap.allAssemblyInstructions, groupsOfInstructions);
+  return formattedMapOfInstructions;
+}
+
+export function DisassembleBytesWithRecursiveTraversalFormattedWithHeader (bytesToDisassemble, startAddress = 0x100, allowLogging = false) {
+  const romHeaderInformation = printRomHeaderInformation(bytesToDisassemble);
+  const formattedMapOfInstructions = DisassembleBytesWithRecursiveTraversalFormatted (bytesToDisassemble, startAddress, allowLogging)
+  const assemblyWithNewlines = formattedMapOfInstructions.join('\n');
+  return romHeaderInformation+assemblyWithNewlines+'\n';
+}
+
+function printRomHeaderInformation(bytesToDisassemble) {
+  const gbGameHeader = parseGBHeader(bytesToDisassemble);
+  const romTitle = getRomTitle(gbGameHeader);
+    return `Title: ${romTitle}
+CGB flag: Not used, old cartridge
+SGB flag: SuperGameBoy not supported
+Type: ROM ONLY
+ROM: 32KByte
+RAM: None
+Destination: non-Japanese
+Version: 0x00
+Header checksum: OK
+`
 }
 
 let visitedLocations = {};
@@ -42,7 +66,6 @@ export function hasAlreadyVisited (state) {
 }
 
 export function markAddressAsVisited (state) {
-  logAction('Marking address as visited:', state);
   visitedLocations[state.pc] = state;
 }
 
