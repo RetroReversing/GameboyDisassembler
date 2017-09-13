@@ -30,6 +30,45 @@ export function getRomTitle(gameHeader) {
     return title.trim();
 }
 
+const romTypeMap = {
+    0: 'ROM ONLY',
+    1: 'MBC1',
+    2: 'MBC1+RAM',
+    3: 'MBC1+RAM+BATTERY',
+    4: "Unknown", 
+    5: "MBC2", 
+    6: "MBC2+BATTERY", 
+    7: "Unknown", 
+    8: "ROM+RAM", 
+    9: "ROM+RAM+BATTERY", 
+    0x0A: "Unknown",
+    0x0B: "MMM01", 
+    0x0C: "MMM01+RAM",             
+    0x0D: "MMM01+RAM+BATTERY", 
+    0x0E: "Unknown", 
+    0x0F: "MBC3+TIMER+BATTERY", 
+    0x10: "MBC3+TIMER+RAM+BATTERY", 
+    0x11: "MBC3", 
+    0x12: "MBC3+RAM", 
+    0x13: "MBC3+RAM+BATTERY",
+    0x14: "Unknown", 
+    0x15: "MBC4", 
+    0x16: "MBC4+RAM",
+    0x17: "MBC4+RAM+BATTERY", 
+    0x18: "Unknown",
+    0x19: "MBC5", 
+    0x1A: "MBC5+RAM", 
+    0x1B: "MBC5+RAM+BATTERY", 
+    0x1C: "MBC5+RUMBLE", 
+    0x1D: "MBC5+RUMBLE+RAM",
+    0x1E: "MBC5+RUMBLE+RAM+BATTERY"
+}
+
+export function getRomType(gameHeader) {
+    const cartType =  gameHeader.cartridgeType;
+    return romTypeMap[cartType] || cartType;
+}
+
 export function getSGBFlag(gameHeader) {
     const flag =  gameHeader.superGameBoy;
     if (flag === 0)
@@ -43,7 +82,7 @@ export function printRomHeaderInformation(bytesToDisassemble) {
       return `Title: ${romTitle}
 CGB flag: Not used, old cartridge
 SGB flag: ${getSGBFlag(gbGameHeader)}
-Type: ROM ONLY
+Type: ${getRomType(gbGameHeader)}
 ROM: 32KByte
 RAM: None
 Destination: non-Japanese
