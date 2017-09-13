@@ -4,7 +4,7 @@ import {reduce, map} from 'lodash';
 import {formatIntoGBDisBinaryFormat} from '../assemblyFormatters/gb-disasmFormatter';
 import {convertTo8CharacterHexAddress} from '../Util/ValueConversion';
 import {logAction} from '../Util/Logger';
-import {parseGBHeader, getRomTitle} from '../romInformation/romInformation';
+import {printRomHeaderInformation, parseGBHeader, getRomTitle} from '../romInformation/romInformation';
 
 /**
  * Disassemble Bytes by executing all jumps, ignoring data, if you don't have data bytes use DisassembleBytesWithRecursiveTraversal
@@ -38,21 +38,6 @@ export function DisassembleBytesWithRecursiveTraversalFormattedWithHeader (bytes
   const formattedMapOfInstructions = DisassembleBytesWithRecursiveTraversalFormatted (bytesToDisassemble, startAddress, allowLogging)
   const assemblyWithNewlines = formattedMapOfInstructions.join('\n');
   return romHeaderInformation+assemblyWithNewlines+'\n';
-}
-
-function printRomHeaderInformation(bytesToDisassemble) {
-  const gbGameHeader = parseGBHeader(bytesToDisassemble);
-  const romTitle = getRomTitle(gbGameHeader);
-    return `Title: ${romTitle}
-CGB flag: Not used, old cartridge
-SGB flag: SuperGameBoy not supported
-Type: ROM ONLY
-ROM: 32KByte
-RAM: None
-Destination: non-Japanese
-Version: 0x00
-Header checksum: OK
-`
 }
 
 let visitedLocations = {};

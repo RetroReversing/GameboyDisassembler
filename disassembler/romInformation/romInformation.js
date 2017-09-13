@@ -1,4 +1,5 @@
-let Parser = require("binary-parser").Parser;
+import {convertTo2CharacterHexAddress} from '../Util/ValueConversion';
+const Parser = require("binary-parser").Parser;
 
 const GBFileHeader = Parser.start()
                         .endianess('little')
@@ -27,4 +28,26 @@ export function parseGBHeader(romData) {
 export function getRomTitle(gameHeader) {
     const title =  gameHeader.title.replace(/\0/g,'');
     return title.trim();
+}
+
+export function getSGBFlag(gameHeader) {
+    const flag =  gameHeader.superGameBoy;
+    if (flag === 0)
+        return 'SuperGameBoy not supported';
+    return '0x'+convertTo2CharacterHexAddress(flag);
+}
+
+export function printRomHeaderInformation(bytesToDisassemble) {
+    const gbGameHeader = parseGBHeader(bytesToDisassemble);
+    const romTitle = getRomTitle(gbGameHeader);
+      return `Title: ${romTitle}
+CGB flag: Not used, old cartridge
+SGB flag: ${getSGBFlag(gbGameHeader)}
+Type: ROM ONLY
+ROM: 32KByte
+RAM: None
+Destination: non-Japanese
+Version: 0x00
+Header checksum: OK
+`
 }

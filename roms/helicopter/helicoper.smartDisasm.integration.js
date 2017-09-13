@@ -24,7 +24,7 @@ describe('Integration tests for Smarter disassembling of Helicoper.js', function
   });
 
   it('should generate assembly output for helicopter.gb with traversal', function () {
-    const resultingAssembly = DisassembleBytesWithRecursiveTraversalFormattedWithHeader(romData, 0x100, true);
+    const resultingAssembly = DisassembleBytesWithRecursiveTraversalFormattedWithHeader(romData, 0x100, false);
     fs.writeFileSync('./roms/helicopter/helicopter.generated.s', resultingAssembly);
     const gbdisOutput = fs.readFileSync('./roms/helicopter/helicoper.gbdis.s');
     assert.deepEqual(resultingAssembly, gbdisOutput.toString());
