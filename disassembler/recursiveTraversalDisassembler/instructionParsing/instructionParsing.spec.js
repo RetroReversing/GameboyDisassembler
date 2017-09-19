@@ -4,7 +4,9 @@ import { describe, it, beforeEach } from 'mocha';
 
 var blankState;
 beforeEach(function () {
-  blankState = {callStack: [0x100], jumpAssemblyInstructions: {}, additionalPaths: [], jumpAddresses: [], pc: 0x00, allAssemblyInstructions: {}};
+  blankState = {callStack: [0x100], jumpAssemblyInstructions: {}, 
+  additionalPaths: [], jumpAddresses: [], pc: 0x00, allAssemblyInstructions: {},
+ symbols:{}};
 });
 
 describe('Instruction parsing', function () {
@@ -15,7 +17,10 @@ describe('Instruction parsing', function () {
   });
 
   it('should parse Call instruction and jump to that location', function () {
-    const resultState = parseCallInstruction([0xC4, 0x20, 0x00], {callStack: [], jumpAssemblyInstructions: {}, jumpAddresses: [], pc: 0x100, additionalPaths: []});
+    let initialState = blankState;
+    initialState.pc = 0x100;
+    initialState.callStack=[];
+    const resultState = parseCallInstruction([0xC4, 0x20, 0x00], initialState);
     assert.deepEqual(resultState.pc, 32);
     const callStackSgouldHaveReturnAddressPlusSizeOfInstruction = 259;
     assert.deepEqual(resultState.callStack, [callStackSgouldHaveReturnAddressPlusSizeOfInstruction]);
