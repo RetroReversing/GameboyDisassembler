@@ -9,7 +9,8 @@ winston.configure({
 
 export function logAction (message, state) {
   if (!state.allowLogging) return;
-  winston.info(message, 'PC:', convertTo8CharacterHexAddress(state.pc));
+  const currentoffset = state.symbols[state.pc] || convertTo8CharacterHexAddress(state.pc);
+  winston.info(message, 'PC:', currentoffset);
 }
 
 export function logError (message, state) {
