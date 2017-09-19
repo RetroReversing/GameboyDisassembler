@@ -26,6 +26,12 @@ describe('Instruction parsing', function () {
     const resultState = parseJumpInstruction([0x18, 0x03], blankState);
     assert.deepEqual(resultState.pc, 0x74);
   });
+
+  it('should not handle JP [HL] Yet', function () {
+    blankState.pc = 0x6F;
+    const resultState = parseJumpInstruction([0xe9], blankState);
+    assert.deepEqual(resultState.pc, 0x6F);
+  });
 });
 
 describe('Calculating jump location', function () {

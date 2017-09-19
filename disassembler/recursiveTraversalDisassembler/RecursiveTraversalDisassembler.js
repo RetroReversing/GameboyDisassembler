@@ -5,6 +5,7 @@ import {formatIntoGBDisBinaryFormat} from '../assemblyFormatters/gb-disasmFormat
 import {convertTo8CharacterHexAddress} from '../Util/ValueConversion';
 import {logAction} from '../Util/Logger';
 import {printRomHeaderInformation, parseGBHeader, getRomTitle} from '../romInformation/romInformation';
+import {parseSymFiles} from '../Util/ParseSymFile';
 
 /**
  * Disassemble Bytes by executing all jumps, ignoring data, if you don't have data bytes use DisassembleBytesWithRecursiveTraversal
@@ -18,24 +19,24 @@ export function DisassembleBytesWithRecursiveTraversal (bytesToDisassemble, star
   return disassembleLoop(startAddress, groupsOfInstructions, [], allowLogging);
 }
 
-export function DisassembleBytesWithRecursiveTraversalIntoOptimizedArray (bytesToDisassemble, startAddress = 0x100, allowLogging = false) {
+export function DisassembleBytesWithRecursiveTraversalIntoOptimizedArray (bytesToDisassemble, startAddress = 0x100, allowLogging = false, symbols={}) {
   const groupsOfInstructions = reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble);
-  const resultingInstructionMap = disassembleLoop(startAddress, groupsOfInstructions, [], allowLogging).allAssemblyInstructions;
+  const resultingInstructionMap = disassembleLoop(startAddress, groupsOfInstructions, [], allowLogging, symbols).allAssemblyInstructions;
   const arrayOfJustInstructions = map(resultingInstructionMap, (value, key) => [value, key.replace('$', '')]);
   const sortedArrayByAddress = arrayOfJustInstructions.sort((a, b) => parseInt(a[1], 16) - parseInt(b[1], 16));
   return reduceInstructionCount(sortedArrayByAddress);
 }
 
-export function DisassembleBytesWithRecursiveTraversalFormatted (bytesToDisassemble, startAddress = 0x100, allowLogging = false) {
+export function DisassembleBytesWithRecursiveTraversalFormatted (bytesToDisassemble, startAddress = 0x100, allowLogging = false, symbols={}) {
   const groupsOfInstructions = reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble);
-  const resultingInstructionMap = disassembleLoop(startAddress, groupsOfInstructions, [], allowLogging);
+  const resultingInstructionMap = disassembleLoop(startAddress, groupsOfInstructions, [], allowLogging, symbols);
   const formattedMapOfInstructions = formatIntoGBDisBinaryFormat(resultingInstructionMap.allAssemblyInstructions, groupsOfInstructions);
   return formattedMapOfInstructions;
 }
 
-export function DisassembleBytesWithRecursiveTraversalFormattedWithHeader (bytesToDisassemble, startAddress = 0x100, allowLogging = false) {
+export function DisassembleBytesWithRecursiveTraversalFormattedWithHeader (bytesToDisassemble, startAddress = 0x100, allowLogging = false, symbols={}) {
   const romHeaderInformation = printRomHeaderInformation(bytesToDisassemble);
-  const formattedMapOfInstructions = DisassembleBytesWithRecursiveTraversalFormatted (bytesToDisassemble, startAddress, allowLogging)
+  const formattedMapOfInstructions = DisassembleBytesWithRecursiveTraversalFormatted (bytesToDisassemble, startAddress, allowLogging, symbols)
   const assemblyWithNewlines = formattedMapOfInstructions.join('\n');
   return romHeaderInformation+assemblyWithNewlines+'\n';
 }
@@ -59,10 +60,17 @@ function resetVisitedAddresses () {
   return visitedLocations;
 }
 
-function disassembleLoop (startAddress, groupsOfInstructions, addressesToJumpTo, allowLogging = false) {
+export function handleSymFile(symFile) {
+  if (symFile)
+  return parseSymFiles('',{},symFile);
+  return new Promise();
+}
+
+function disassembleLoop (startAddress, groupsOfInstructions, addressesToJumpTo, allowLogging = false, symbols={}) {
   resetVisitedAddresses();
   addressesToJumpTo.push(startAddress);
-  let state = {pc: startAddress, jumpAddresses: [startAddress], jumpAssemblyInstructions: {}, allAssemblyInstructions: {}, callStack: [], additionalPaths: [], allowLogging: allowLogging};
+  let state = {pc: startAddress, jumpAddresses: [startAddress], jumpAssemblyInstructions: {}, allAssemblyInstructions: {}, callStack: [], additionalPaths: [], allowLogging: allowLogging, 
+  symbols: symbols};
   let currentLoop = 0;
   while (true) {
     const instruction = groupsOfInstructions.instructions[state.pc];
