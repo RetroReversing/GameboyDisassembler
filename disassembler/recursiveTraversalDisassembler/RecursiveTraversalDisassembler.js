@@ -1,5 +1,5 @@
 import {parseInstruction} from './instructionParsing/instructionParsing';
-import {reduceBytesToDisassembleIntoInstructionGroupData} from '../linearSweepDisassembler/LinearSweepDisassembler';
+import {reduceBytesToDisassembleIntoInstructionGroupData, reduceBytesIntoInstructions} from '../linearSweepDisassembler/LinearSweepDisassembler';
 import {reduce, map} from 'lodash';
 import {formatIntoGBDisBinaryFormat} from '../assemblyFormatters/gb-disasmFormatter';
 import {convertTo8CharacterHexAddress} from '../Util/ValueConversion';
@@ -16,12 +16,12 @@ import {parseSymFiles} from '../Util/ParseSymFile';
  */
 export function DisassembleBytesWithRecursiveTraversal (bytesToDisassemble, startAddress = 0x100, allowLogging = false) {
   const groupsOfInstructions = reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble);
-  return disassembleLoop(startAddress, groupsOfInstructions, [], allowLogging);
+  return disassembleLoop(startAddress, groupsOfInstructions, bytesToDisassemble, [], allowLogging);
 }
 
 export function DisassembleBytesWithRecursiveTraversalIntoOptimizedArray (bytesToDisassemble, startAddress = 0x100, allowLogging = false, symbols={}) {
   const groupsOfInstructions = reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble);
-  const resultingInstructionMap = disassembleLoop(startAddress, groupsOfInstructions, [], allowLogging, symbols).allAssemblyInstructions;
+  const resultingInstructionMap = disassembleLoop(startAddress, groupsOfInstructions,bytesToDisassemble, [], allowLogging, symbols).allAssemblyInstructions;
   const arrayOfJustInstructions = map(resultingInstructionMap, (value, key) => [value, key.replace('$', '')]);
   const sortedArrayByAddress = arrayOfJustInstructions.sort((a, b) => parseInt(a[1], 16) - parseInt(b[1], 16));
   return reduceInstructionCount(sortedArrayByAddress);
@@ -29,7 +29,7 @@ export function DisassembleBytesWithRecursiveTraversalIntoOptimizedArray (bytesT
 
 export function DisassembleBytesWithRecursiveTraversalFormatted (bytesToDisassemble, startAddress = 0x100, allowLogging = false, symbols={}) {
   const groupsOfInstructions = reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble);
-  const resultingInstructionMap = disassembleLoop(startAddress, groupsOfInstructions, [], allowLogging, symbols);
+  const resultingInstructionMap = disassembleLoop(startAddress, groupsOfInstructions, bytesToDisassemble, [], allowLogging, symbols);
   const formattedMapOfInstructions = formatIntoGBDisBinaryFormat(resultingInstructionMap.allAssemblyInstructions, groupsOfInstructions);
   return formattedMapOfInstructions;
 }
@@ -66,7 +66,39 @@ export function handleSymFile(symFile) {
   return new Promise();
 }
 
-function disassembleLoop (startAddress, groupsOfInstructions, addressesToJumpTo, allowLogging = false, symbols={}) {
+function findNewUnexploredPath(state, instruction) {
+  const previousPC = state.pc;
+  state.pc = state.additionalPaths.pop();
+  logAction('Going To additional path from:' + convertTo8CharacterHexAddress(previousPC) + ' To:' + convertTo8CharacterHexAddress(state.pc), state);
+  return state;
+}
+
+function recalculateGroupOfInstructionsFor(addressOfOpcode, bytesToDisassemble, groupsOfInstructions, state) {
+  // 
+  // This is due to oversimplification of the groupsOfInstructions, I presumed that looping over each byte and checking the size of the
+  // instruction was enough, but the problem is data is inbetween code blocks so it causes it to get out of alignment
+  // So this function calculates the instructions that were not part of the initial linear sweep pass.
+  // 
+  reduceBytesIntoInstructions(groupsOfInstructions, bytesToDisassemble[addressOfOpcode], addressOfOpcode, bytesToDisassemble);
+  state.additionalPaths.push(addressOfOpcode);
+}
+
+function handleInvalidNextState(state, instruction, bytesToDisassemble, groupsOfInstructions) {
+
+  if (!instruction) {
+    if (state.pc >= bytesToDisassemble.length) return;
+    logAction('<-- Instruction invalid: '+instruction+' '+state.pc+' '+convertTo8CharacterHexAddress(state.pc),state);
+    recalculateGroupOfInstructionsFor(state.pc, bytesToDisassemble, groupsOfInstructions, state);
+    return;
+  }
+  if (hasAlreadyVisited(state))
+  {  
+    logAction('<-- hasAlreadyVisited',state); 
+  }
+
+}
+
+function disassembleLoop (startAddress, groupsOfInstructions, bytesToDisassemble, addressesToJumpTo, allowLogging = false, symbols={}) {
   resetVisitedAddresses();
   addressesToJumpTo.push(startAddress);
   let state = {pc: startAddress, jumpAddresses: [startAddress], jumpAssemblyInstructions: {}, allAssemblyInstructions: {}, callStack: [], additionalPaths: [], allowLogging: allowLogging, 
@@ -75,10 +107,9 @@ function disassembleLoop (startAddress, groupsOfInstructions, addressesToJumpTo,
   while (true) {
     const instruction = groupsOfInstructions.instructions[state.pc];
     if (!instruction || hasAlreadyVisited(state)) {
+      handleInvalidNextState(state,instruction, bytesToDisassemble, groupsOfInstructions);
       if (state.additionalPaths.length === 0) break;
-      const previousPC = state.pc;
-      state.pc = state.additionalPaths.pop();
-      logAction('Going To additional path from:' + convertTo8CharacterHexAddress(previousPC) + ' To:' + convertTo8CharacterHexAddress(state.pc), state);
+      state = findNewUnexploredPath(state, instruction);
       continue;
     }
     markAddressAsVisited(state);
@@ -97,7 +128,7 @@ function disassembleLoop (startAddress, groupsOfInstructions, addressesToJumpTo,
  */
 export function findAllJumpInstructions (bytesToDisassemble, startAddress = 0x100) {
   const groupsOfInstructions = reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble);
-  return disassembleLoop(startAddress, groupsOfInstructions, []).jumpAssemblyInstructions;
+  return disassembleLoop(startAddress, groupsOfInstructions, bytesToDisassemble, []).jumpAssemblyInstructions;
 }
 
 function reduceIdenticalInstructionsIntoOne (newInstructionList, value, index, collection) {

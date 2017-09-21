@@ -21,17 +21,17 @@ export function convertHexStringToNumber (hexString) {
   return parseInt(hexString, 16);
 }
 
-export function convertTo8CharacterHexAddress (hexAddressWithoutPrefix) {
-  return toPaddedHexString(8, hexAddressWithoutPrefix);
+export function convertTo8CharacterHexAddress (hexAddressWithoutPrefix, state={}, additionalDetails='') {
+  return toPaddedHexString(8, hexAddressWithoutPrefix, state, additionalDetails+' through convertTo8CharacterHexAddress');
 }
 
-export function convertTo2CharacterHexAddress (hexAddressWithoutPrefix) {
-  return toPaddedHexString(2, hexAddressWithoutPrefix);
+export function convertTo2CharacterHexAddress (hexAddressWithoutPrefix, state={}, additionalDetails='') {
+  return toPaddedHexString(2, hexAddressWithoutPrefix, state, additionalDetails+' through convertTo2CharacterHexAddress');
 }
 
-function toPaddedHexString (len, num) {
+function toPaddedHexString (len, num, state={}, additionalDetails='') {
   if (typeof (num) === 'undefined') {
-    logError('toPaddedHexString number was not valid:' + num + ' ' + len);
+    logError('toPaddedHexString number was not valid:' + num + ' ' + len+' '+additionalDetails);
     num = 0;
   }
   const str = (num).toString(16).toUpperCase();

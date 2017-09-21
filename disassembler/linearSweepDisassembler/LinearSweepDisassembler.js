@@ -7,7 +7,7 @@ templateSettings.interpolate = /{{([\s\S]+?)}}/g;
 /**
  * Disassembles a single instruction (opcode + operands)
  *
- * @param {any} byteValue
+ * @param {byte[]} byteValue (bytes for this instruction)
  * @param {any} key
  * @param {any} byteArray
  * @returns
@@ -88,15 +88,15 @@ function skipBytesAndAddOperandsToLastInstruction (assemblyInstructions, operand
   return assemblyInstructions;
 }
 
-export function joinOpcodesAndOperands (assemblyInstructions, value, index, collection) {
+export function reduceBytesIntoInstructions (assemblyInstructions, valueAtAddress, addressOfOpcode, collection) {
   if (assemblyInstructions.skipBytes === 0) {
-    return handleOpcode(value, assemblyInstructions, index);
+    return handleOpcode(valueAtAddress, assemblyInstructions, addressOfOpcode);
   }
-  return skipBytesAndAddOperandsToLastInstruction(assemblyInstructions, value, index);
+  return skipBytesAndAddOperandsToLastInstruction(assemblyInstructions, valueAtAddress, addressOfOpcode);
 }
 
 export function reduceBytesToDisassembleIntoInstructionGroupData (bytesToDisassemble) {
-  return reduce(bytesToDisassemble, joinOpcodesAndOperands, {instructions: {}, skipBytes: 0, keys: []});
+  return reduce(bytesToDisassemble, reduceBytesIntoInstructions, {instructions: {}, skipBytes: 0, keys: []});
 }
 
 function reduceBytesToDisassembleIntoInstructionGroups (bytesToDisassemble) {

@@ -1,4 +1,4 @@
-import {DisassembleBytesWithLinearSweep, joinOpcodesAndOperands} from './LinearSweepDisassembler';
+import {DisassembleBytesWithLinearSweep, reduceBytesIntoInstructions} from './LinearSweepDisassembler';
 import {isJumpInstruction, isCallInstruction, isRetInstruction} from '../disassemblerInstructions';
 import * as assert from 'assert';
 import { describe, it } from 'mocha';
@@ -55,7 +55,7 @@ describe('Disassemble Rom with LinearSweep', function () {
   });
 
   it('should be able to join opcodes and operands into one array', function () {
-    const instructionResult = joinOpcodesAndOperands({instructions: {}, skipBytes: 0, keys: []}, 0x18, 0, []);
+    const instructionResult = reduceBytesIntoInstructions({instructions: {}, skipBytes: 0, keys: []}, 0x18, 0, []);
     assert.deepEqual(instructionResult, { instructions: {0: [24]}, skipBytes: 1, 'lastAddedInstruction': 0, 'keys': [0] });
   });
 });

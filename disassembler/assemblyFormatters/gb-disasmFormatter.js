@@ -19,9 +19,9 @@ export function sortMapOfInstructions (mapOfInstructions) {
 
 const spacesBasedOnInstructionLength = {1: '           ', 2: '      ', 3: ' '};
 
-export function getFullAddress (originalHexAddress) {
+export function getFullAddress (originalHexAddress, state={}, additionalDetails='') {
   const hexAddressWithoutPrefix = originalHexAddress.replace('$', '');
-  return '[0x' + convertTo8CharacterHexAddress(hexAddressWithoutPrefix) + ']';
+  return '[0x' + convertTo8CharacterHexAddress(hexAddressWithoutPrefix, state, additionalDetails+' via getFullAddress') + ']';
 }
 
 function getHexBytesForInstruction (originalHexAddress, groupsOfInstructions) {
