@@ -9,7 +9,7 @@ function addAdditionalTraversalPath (state, instruction) {
   return state;
 }
 
-export function parseJumpInstruction (instruction, state) {
+export function parseJumpInstruction (instruction, state, additionalDetails='') {
   if (!isJumpInstruction(instruction)) return state;
   
   if (instruction[0] === 233) {
@@ -18,12 +18,12 @@ export function parseJumpInstruction (instruction, state) {
   }
   const jumpDestination = calculateJumpLocation(instruction, state);
   state.jumpAddresses.push(jumpDestination);
-  state.jumpAssemblyInstructions[state.pc] = DisassembleBytesWithLinearSweep(instruction);
+  state.jumpAssemblyInstructions[state.pc] = DisassembleBytesWithLinearSweep(instruction, state, additionalDetails+' via parseJumpInstruction');
   let comments = '';
   if (isRelativeJump(instruction)) {
     comments = ' ; ' + convertToHex(jumpDestination, '0x');
   }
-  state = saveDisassemblyInformationForAddress(instruction, state, comments);
+  state = saveDisassemblyInformationForAddress(instruction, state, comments, additionalDetails+' via parseJumpInstruction');
   if (isJumpConditionalInstruction(instruction)) {
     addAdditionalTraversalPath(state, instruction);
   }
@@ -44,11 +44,11 @@ function numberOfUsagesOfJumpableAddress (usedAddress, state) {
   return state.usages[usedAddress].length;
 }
 
-function handleCallJumping (jumpDestination, instruction, state) {
+function handleCallJumping (jumpDestination, instruction, state, additionalDetails='') {
   const userFriendlyJumpLocation = state.symbols[jumpDestination] || convertTo8CharacterHexAddress(jumpDestination, state, 'handleCallJumping jumpDestination');
   logAction('--> Jumping to: ' + userFriendlyJumpLocation, state);
   state.jumpAddresses.push(jumpDestination);
-  state.jumpAssemblyInstructions[state.pc] = DisassembleBytesWithLinearSweep(instruction);
+  state.jumpAssemblyInstructions[state.pc] = DisassembleBytesWithLinearSweep(instruction, state, additionalDetails+' via handleCallJumping');
   const jumpBackLocation = state.pc + instruction.length;
   logAction('-- Add To Callstack (for RET): ' + convertTo8CharacterHexAddress(jumpBackLocation, state, 'handleCallJumping jumpBackLocation'), state);
   state.callStack.push(jumpBackLocation);
@@ -73,7 +73,7 @@ export function parseCallInstruction (instruction, state) {
   return state;
 }
 
-export function parseRetInstruction (instruction, state) {
+export function parseRetInstruction (instruction, state, additionalDetails='') {
   if (!isRetInstruction(instruction)) return state;
   const jumpDestination = state.callStack.pop();
   if (!jumpDestination) {
@@ -81,7 +81,7 @@ export function parseRetInstruction (instruction, state) {
     return state;
   }
   let userFriendlyJumpLocation = state.symbols[jumpDestination] || convertTo8CharacterHexAddress(jumpDestination,state,'parseRetInstruction jumpDestination callstack.pop');
-  state.jumpAssemblyInstructions[state.pc] = DisassembleBytesWithLinearSweep(instruction);
+  state.jumpAssemblyInstructions[state.pc] = DisassembleBytesWithLinearSweep(instruction, state, additionalDetails+' via parseRetInstruction');
   if (isRetConditionalInstruction(instruction)) {
     userFriendlyJumpLocation+=' (Conditional)'
     addAdditionalTraversalPath(state, instruction);
@@ -92,16 +92,16 @@ export function parseRetInstruction (instruction, state) {
   return state;
 }
 
-function saveDisassemblyInformationForAddress (instruction, state, comments = '') {
+function saveDisassemblyInformationForAddress (instruction, state, comments = '', additionalDetails='') {
   //
   // Here pc is pointing to the first instruction in this opcode
   //
-  const instructionPCAddress = convertTo8CharacterHexAddress(state.pc, state, 'saveDisassemblyInformationForAddress');
+  const instructionPCAddress = convertTo8CharacterHexAddress(state.pc, state, additionalDetails+' -> saveDisassemblyInformationForAddress');
   if (state.symbols[state.pc]) {
     if (state.allowSymbols)
     comments+='; '+state.symbols[state.pc];
   }
-  state.allAssemblyInstructions[instructionPCAddress] = DisassembleBytesWithLinearSweep(instruction) + comments;
+  state.allAssemblyInstructions[instructionPCAddress] = DisassembleBytesWithLinearSweep(instruction,state,additionalDetails+' via saveDisassemblyInformationForAddress') + comments;
   return state;
 }
 
@@ -119,7 +119,7 @@ function logExecutionOfInstructionWithSymbol(state) {
  * @param {any} state
  * @returns
  */
-export function parseInstruction (instruction, state) {
+export function parseInstruction (instruction, state, additionalDetails='') {
   if (instruction.length > 3) {
     console.info('instruction.length:', instruction.length, instruction);
   }
@@ -127,7 +127,7 @@ export function parseInstruction (instruction, state) {
   //
   // Here pc is pointing to the first instruction in this opcode
   //
-  state = saveDisassemblyInformationForAddress(instruction, state);
+  state = saveDisassemblyInformationForAddress(instruction, state, '', additionalDetails+' --> parseInstruction');
   // now calculate jumps etc
   const programCounterForThisInstruction = state.pc;
   state = parseJumpInstruction(instruction, state);

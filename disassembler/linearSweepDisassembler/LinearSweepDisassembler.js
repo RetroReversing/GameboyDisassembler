@@ -1,6 +1,7 @@
 import {oneByteInstructions, twoByteInstructions, threeByteInstructions, cbPrefixedOps} from '../disassemblerInstructions';
 import {convertToHex, convertTo2CharacterHexAddress} from '../Util/ValueConversion';
 import {template, reduce, templateSettings, includes} from 'lodash';
+import {logError} from '../Util/Logger';
 const { Seq } = require('immutable');
 templateSettings.interpolate = /{{([\s\S]+?)}}/g;
 
@@ -12,7 +13,7 @@ templateSettings.interpolate = /{{([\s\S]+?)}}/g;
  * @param {any} byteArray
  * @returns
  */
-export function disassembleByte (byteValue, key, byteArray) {
+export function disassembleByte (byteValue, key, byteArray, state={}, additionalDetails='') {
   const opcode = byteValue[0];
   if (oneByteInstructions[opcode]) { return oneByteInstructions[opcode]; }
   const operand = byteValue[1];
@@ -20,7 +21,7 @@ export function disassembleByte (byteValue, key, byteArray) {
     return handleCBPrefixedInstructions(opcode, operand);
   }
   if (twoByteInstructions[opcode]) {
-    return handleTwoByteInstructions(opcode, operand);
+    return handleTwoByteInstructions(opcode, operand, state, additionalDetails+' via disassembleByte');
   }
   if (threeByteInstructions[opcode]) {
     return handleThreeByteInstructions(opcode, operand, byteValue[2]);
@@ -43,9 +44,12 @@ function handleCBPrefixedInstructions (CBByte, actualInstruction) {
   return cbPrefixedOps[actualInstruction];
 }
 
-function handleTwoByteInstructions (byteValue, operandByte) {
+function handleTwoByteInstructions (byteValue, operandByte, state={}, additionalDetails='') {
   const instructionString = twoByteInstructions[byteValue];
-  const operand = '$' + convertTo2CharacterHexAddress(operandByte);
+  if (typeof(operandByte) === 'undefined') {
+    logError('Error: operandByte was undefined in handleTwoByteInstructions ('+additionalDetails+')');
+  }
+  const operand = '$' + convertTo2CharacterHexAddress(operandByte, state, additionalDetails+' via handleTwoByteInstructions');
   if (includes(instructionString, '{{op1}}')) {
     return handleTemplatizedInstruction(instructionString, operand);
   }
@@ -57,10 +61,10 @@ function formatSpacesBetweenOpcodeAndOperandStrings (opcodeString, operandString
   return opcodeString + ' '.repeat(spacesBetween) + operandString;
 }
 
-function handleThreeByteInstructions (byteValue, operandByte1, operandByte2) {
+function handleThreeByteInstructions (byteValue, operandByte1, operandByte2, state={}, additionalDetails='') {
   const instructionString = threeByteInstructions[byteValue];
 
-  const operand = '$' + convertTo2CharacterHexAddress(operandByte2) + convertTo2CharacterHexAddress(operandByte1);
+  const operand = '$' + convertTo2CharacterHexAddress(operandByte2) + convertTo2CharacterHexAddress(operandByte1, state, additionalDetails+' via handleThreeByteInstructions');
   if (includes(instructionString, '{{op1}}')) {
     return handleTemplatizedInstruction(instructionString, operand);
   }
@@ -110,10 +114,11 @@ function reduceBytesToDisassembleIntoInstructionGroups (bytesToDisassemble) {
  * @param {any} bytesToDisassemble
  * @returns
  */
-export function DisassembleBytesWithLinearSweep (bytesToDisassemble) {
+export function DisassembleBytesWithLinearSweep (bytesToDisassemble, state={}, additionalDetails='') {
   const instructions = reduceBytesToDisassembleIntoInstructionGroups(bytesToDisassemble);
+  additionalDetails+=' via DisassembleBytesWithLinearSweep';
   return Seq(instructions)
-           .map(disassembleByte)
+           .map((byteValue, key, byteArray) => disassembleByte(byteValue, key, byteArray,state,additionalDetails))
            .filter(assemblyCode => assemblyCode !== '')
            .toArray();
 }

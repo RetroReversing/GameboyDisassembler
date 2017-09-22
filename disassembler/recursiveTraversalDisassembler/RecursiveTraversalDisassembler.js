@@ -79,7 +79,12 @@ function recalculateGroupOfInstructionsFor(addressOfOpcode, bytesToDisassemble, 
   // instruction was enough, but the problem is data is inbetween code blocks so it causes it to get out of alignment
   // So this function calculates the instructions that were not part of the initial linear sweep pass.
   // 
+  groupsOfInstructions.skipBytes = 0;
   reduceBytesIntoInstructions(groupsOfInstructions, bytesToDisassemble[addressOfOpcode], addressOfOpcode, bytesToDisassemble);
+  // Now loop over the 'skipped bytes' in order to form the whole instruction (up to 3 bytes long)
+  for (let i=1; i<=groupsOfInstructions.skipBytes; i++) {
+    reduceBytesIntoInstructions(groupsOfInstructions, bytesToDisassemble[addressOfOpcode+i], addressOfOpcode, bytesToDisassemble);    
+  }
   state.additionalPaths.push(addressOfOpcode);
 }
 
@@ -113,7 +118,7 @@ function disassembleLoop (startAddress, groupsOfInstructions, bytesToDisassemble
       continue;
     }
     markAddressAsVisited(state);
-    state = parseInstruction(instruction, state);
+    state = parseInstruction(instruction, state, '--> disassembleLoop');
     currentLoop++;
   }
   return state;

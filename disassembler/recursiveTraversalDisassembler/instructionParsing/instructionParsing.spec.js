@@ -6,7 +6,7 @@ var blankState;
 beforeEach(function () {
   blankState = {callStack: [0x100], jumpAssemblyInstructions: {}, 
   additionalPaths: [], jumpAddresses: [], pc: 0x00, allAssemblyInstructions: {},
- symbols:{}};
+ symbols:{}, allowSymbols:false};
 });
 
 describe('Instruction parsing', function () {

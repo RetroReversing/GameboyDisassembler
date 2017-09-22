@@ -69,4 +69,9 @@ describe('should be able to support addresses that need to be put in [] with Lin
     const resultingAssembly = DisassembleBytesWithLinearSweep([0xEA, 0xA1, 0xC0]);
     assert.deepEqual(resultingAssembly, ['LD [$C0A1],A']);
   });
+
+  it('should be able to support LDH A,[$A9]', function () {
+    const resultingAssembly = DisassembleBytesWithLinearSweep([0xF0, 0xA9]);
+    assert.deepEqual(resultingAssembly, ['LDH A,[$A9]']);
+  });
 });
