@@ -1,4 +1,4 @@
-Title: 2048-gb
+Title: 2048-gb    XXXX
 CGB flag: Not used, old cartridge
 SGB flag: 0xFF
 Type: MBC1+RAM+BATTERY

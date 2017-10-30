@@ -36,7 +36,7 @@ describe('Rom Information', function () {
   it('should be able to get the Title of the rom', function () {
     const gbGameHeader = parseGBHeader(romData);
     const result = getRomTitle(gbGameHeader);
-    assert.deepEqual(result, '2048-gb');
+    assert.deepEqual(result, '2048-gb    XXXX');
   });
 });
 
