@@ -44,8 +44,11 @@ export function getVersion(gameHeader) {
 }
 
 export function getRomTitle(gameHeader) {
-    const title =  gameHeader.title.replace(/\0/g,'');
-    return title.trim();
+    let title =  (gameHeader.title);
+    if (gameHeader.manufacturer) {
+        title += gameHeader.manufacturer;
+    }
+    return title.replace(/\0/g,'').trim();
 }
 
 const romTypeMap = {
