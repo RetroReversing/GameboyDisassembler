@@ -14,6 +14,7 @@ npm run build && npm publish
 ```
 
 ## TODO
+* Bank changing emulation
 * Create assembler of the form:
 ```
 const function0x000 = new CodeBlock()
