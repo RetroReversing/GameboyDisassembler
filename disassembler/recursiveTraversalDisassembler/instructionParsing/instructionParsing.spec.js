@@ -1,11 +1,11 @@
-import {parseRetInstruction, parseCallInstruction, calculateJumpLocation, parseJumpInstruction} from './instructionParsing';
+import {parseRetInstruction, parseLoadInstruction, parseCallInstruction, calculateJumpLocation, parseJumpInstruction} from './instructionParsing';
 import * as assert from 'assert';
 import { describe, it, beforeEach } from 'mocha';
 
 var blankState;
 beforeEach(function () {
   blankState = {callStack: [0x100], jumpAssemblyInstructions: {}, 
-  additionalPaths: [], jumpAddresses: [], pc: 0x00, allAssemblyInstructions: {},
+  additionalPaths: [], jumpAddresses: [], pc: 0x00, allAssemblyInstructions: {}, bank:0, a:0,
  symbols:{}, allowSymbols:false};
 });
 
@@ -76,5 +76,19 @@ describe('Calculating jump location', function () {
   it('should be able to support Call instruction to 0x0307', function () {
     const result = calculateJumpLocation([205, 7, 3], {pc: 0x0});
     assert.deepEqual(result, 775);
+  });
+});
+
+describe('Load/Store/Move instructions', function () {
+  it('should parse LD [a16],A instruction and detect a bank switch', function () {
+    const stateWithARegisterSetToBank2 = Object.assign({},blankState,{a:0x02});
+    const resultState = parseLoadInstruction([0xEA,0x00,0x20], stateWithARegisterSetToBank2);
+    assert.deepEqual(resultState.bank, 0x02);
+  });
+
+  it('should parse LD [a16],A instruction and not detect a bank switch', function () {
+    const stateWithARegisterSetTo9 = Object.assign({},blankState,{a:0x09});
+    const resultState = parseLoadInstruction([0xEA,0x00,0x01], stateWithARegisterSetTo9);
+    assert.deepEqual(resultState.bank, 0x00);
   });
 });

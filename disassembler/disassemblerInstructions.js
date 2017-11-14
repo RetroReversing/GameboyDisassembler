@@ -9,6 +9,11 @@ export function isCallInstruction (instruction) {
 export function isRetInstruction (instruction) {
   return retInstructions[instruction[0]] !== undefined;
 }
+export function isLoadInstruction (instruction) {
+  return loadInstructions[instruction[0]] !== undefined;
+}
+
+
 
 export function isJumpConditionalInstruction (instruction) {
   return jumpInstructions[instruction[0]].conditional;
@@ -53,3 +58,8 @@ export const retInstructions = {
   0xD8: {conditional: true},
   0xD9: {conditional: false}
 };
+
+// TODO: Need to complete the list of load instructions
+export const loadInstructions = {
+  0xEA: {set:'a16', toBe:'A'}
+}

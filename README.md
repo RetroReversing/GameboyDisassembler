@@ -14,7 +14,7 @@ npm run build && npm publish
 ```
 
 ## TODO
-* Bank changing emulation
+* Handle load instructions for Bank changing (use python script to generate to to/from registers for each instruction)
 * Create assembler of the form:
 ```
 const function0x000 = new CodeBlock()

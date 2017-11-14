@@ -38,6 +38,22 @@ export function getRAM(gameHeader) {
     return ramSizes[ramSize] || 'Unknown';
 }
 
+const romSizes = {
+    0:"32KByte",
+    1:"64KByte",
+    2:"128KByte",
+    3:"256KByte",
+    4:"512KByte",
+    5:"1MByte",
+    6:"2MByte",
+    7:"4MByte"
+};
+
+export function getROM(gameHeader) {
+    const romSize =  gameHeader.romSize;
+    return romSizes[romSize] || 'Unknown';
+}
+
 export function getVersion(gameHeader) {
     const flag =  gameHeader.maskRomVersionNumber;
     return '0x'+convertTo2CharacterHexAddress(flag);
@@ -104,7 +120,7 @@ export function printRomHeaderInformation(bytesToDisassemble) {
 CGB flag: Not used, old cartridge
 SGB flag: ${getSGBFlag(gbGameHeader)}
 Type: ${getRomType(gbGameHeader)}
-ROM: 32KByte
+ROM: ${getROM(gbGameHeader)}
 RAM: ${getRAM(gbGameHeader)}
 Destination: non-Japanese
 Version: ${getVersion(gbGameHeader)}

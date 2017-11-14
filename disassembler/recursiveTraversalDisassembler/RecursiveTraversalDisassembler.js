@@ -103,11 +103,28 @@ function handleInvalidNextState(state, instruction, bytesToDisassemble, groupsOf
 
 }
 
+class State {
+  constructor(pc, jumpAddresses, allowLogging, symbols) {
+    this.jumpAddresses = jumpAddresses;
+    this.allAssemblyInstructions={};
+    this.jumpAssemblyInstructions={};
+    this.callStack=[];
+    this.additionalPaths=[];
+    this.allowLogging=false;
+    this.symbols={};
+    this.bankSwitches={};
+    this.pc = pc;
+    this.allowLogging = allowLogging;
+    this.symbols = symbols
+  }
+}
+
 function disassembleLoop (startAddress, groupsOfInstructions, bytesToDisassemble, addressesToJumpTo, allowLogging = false, symbols={}) {
   resetVisitedAddresses();
   addressesToJumpTo.push(startAddress);
-  let state = {pc: startAddress, jumpAddresses: [startAddress], jumpAssemblyInstructions: {}, allAssemblyInstructions: {}, callStack: [], additionalPaths: [], allowLogging: allowLogging, 
-  symbols: symbols};
+  let state = new State(startAddress, [startAddress], true, symbols);
+  //{pc: startAddress, jumpAddresses: [startAddress], jumpAssemblyInstructions: {}, allAssemblyInstructions: {}, callStack: [], additionalPaths: [], allowLogging: allowLogging, 
+  //symbols: symbols, bankSwitches:{}};
   let currentLoop = 0;
   while (true) {
     const instruction = groupsOfInstructions.instructions[state.pc];

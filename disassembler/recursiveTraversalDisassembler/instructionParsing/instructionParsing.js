@@ -1,4 +1,4 @@
-import {isJumpInstruction, isCallInstruction, isRetInstruction, isJumpConditionalInstruction, isRetConditionalInstruction} from '../../disassemblerInstructions';
+import {isJumpInstruction, isLoadInstruction, isCallInstruction, isRetInstruction, isJumpConditionalInstruction, isRetConditionalInstruction} from '../../disassemblerInstructions';
 import {DisassembleBytesWithLinearSweep} from '../../linearSweepDisassembler/LinearSweepDisassembler';
 import {convertToHex, convertTo2CharacterHexAddress, convertTo8BitSignedValue, convertHexStringToNumber, convertTo8CharacterHexAddress} from '../../Util/ValueConversion';
 import {logAction, logError} from '../../Util/Logger';
@@ -73,6 +73,18 @@ export function parseCallInstruction (instruction, state) {
   return state;
 }
 
+export function parseLoadInstruction (instruction, state, additionalDetails='') {
+  if (!isLoadInstruction(instruction)) return state;
+  const ROM_ONLY = 0;
+  const mbc = 1;
+  const addr16 = convert16BitInstructionOperandsToNumber(instruction);
+  if(mbc != ROM_ONLY && (addr16 == 0x2000 || addr16 == 0x2100)) {
+    logAction(`BANK: Bank switch to ${state.a}`, state);
+		state.bank = state.a;
+	}
+  return state;
+}
+
 export function parseRetInstruction (instruction, state, additionalDetails='') {
   if (!isRetInstruction(instruction)) return state;
   const jumpDestination = state.callStack.pop();
@@ -133,6 +145,7 @@ export function parseInstruction (instruction, state, additionalDetails='') {
   state = parseJumpInstruction(instruction, state);
   state = parseCallInstruction(instruction, state);
   state = parseRetInstruction(instruction, state);
+  state = parseLoadInstruction(instruction,state);
 
   if (state.pc === programCounterForThisInstruction) {
     return gotoNextInstructionLocation(state, instruction);
@@ -157,10 +170,14 @@ function isRelativeJump (instruction) {
   return false;
 }
 
+export function convert16BitInstructionOperandsToNumber(instruction) {
+  const hexString = convertTo2CharacterHexAddress(instruction[2]) + '' + convertTo2CharacterHexAddress(instruction[1]);
+  return convertHexStringToNumber(hexString);
+}
+
 export function calculateJumpLocation (instruction, state) {
   if (!isRelativeJump(instruction)) {
-    const hexString = convertTo2CharacterHexAddress(instruction[2]) + '' + convertTo2CharacterHexAddress(instruction[1]);
-    return convertHexStringToNumber(hexString);
+    return convert16BitInstructionOperandsToNumber(instruction);
   }
   //
   // This presumes the current pc points to the first byte in this instruction
