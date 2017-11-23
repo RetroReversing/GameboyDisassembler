@@ -80,7 +80,8 @@ export function parseLoadInstruction (instruction, state, additionalDetails='') 
   const addr16 = convert16BitInstructionOperandsToNumber(instruction);
   if(mbc != ROM_ONLY && (addr16 == 0x2000 || addr16 == 0x2100)) {
     logAction(`BANK: Bank switch to ${state.a}`, state);
-		state.bank = state.a;
+    state.bank = state.a;
+    state.bankSwitches[state.pc] = state.a;
 	}
   return state;
 }

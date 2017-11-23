@@ -1,3 +1,5 @@
+import {convertToHex, convertTo2CharacterHexAddress, convertTo8BitSignedValue, convertHexStringToNumber, convertTo8CharacterHexAddress} from './Util/ValueConversion';
+
 export function isJumpInstruction (instruction) {
   return jumpInstructions[instruction[0]] !== undefined;
 }
@@ -10,10 +12,9 @@ export function isRetInstruction (instruction) {
   return retInstructions[instruction[0]] !== undefined;
 }
 export function isLoadInstruction (instruction) {
-  return loadInstructions[instruction[0]] !== undefined;
+  const opcodeAsLowercaseInstruction = '0x'+convertTo2CharacterHexAddress(instruction[0]).toLowerCase()
+  return loadInstructions[opcodeAsLowercaseInstruction] !== undefined;
 }
-
-
 
 export function isJumpConditionalInstruction (instruction) {
   return jumpInstructions[instruction[0]].conditional;
@@ -59,7 +60,5 @@ export const retInstructions = {
   0xD9: {conditional: false}
 };
 
-// TODO: Need to complete the list of load instructions
-export const loadInstructions = {
-  0xEA: {set:'a16', toBe:'A'}
-}
+// TODO: Need to add flags to load instructions and parse the loads properly
+export const loadInstructions = {'0x3e': {'load': 'd8', 'into': 'A'}, '0x3a': {'load': '[HLD]', 'into': 'A'}, '0xf8': {'load': 'SP+r8', 'into': 'HL'}, '0xf9': {'load': 'HL', 'into': 'SP'}, '0x22': {'load': 'A', 'into': '[HLI]'}, '0x21': {'load': 'd16', 'into': 'HL'}, '0x26': {'load': 'd8', 'into': 'H'}, '0x36': {'load': 'd8', 'into': '[HL]'}, '0x31': {'load': 'd16', 'into': 'SP'}, '0x32': {'load': 'A', 'into': '[HLD]'}, '0xa': {'load': '[BC]', 'into': 'A'}, '0x2a': {'load': '[HLI]', 'into': 'A'}, '0x2e': {'load': 'd8', 'into': 'L'}, '0x5c': {'load': 'H', 'into': 'E'}, '0x5b': {'load': 'E', 'into': 'E'}, '0x5a': {'load': 'D', 'into': 'E'}, '0x8': {'load': 'SP', 'into': '[a16]'}, '0x5f': {'load': 'A', 'into': 'E'}, '0x5e': {'load': '[HL]', 'into': 'E'}, '0x5d': {'load': 'L', 'into': 'E'}, '0x2': {'load': 'A', 'into': '[BC]'}, '0x1': {'load': 'd16', 'into': 'BC'}, '0x6': {'load': 'd8', 'into': 'B'}, '0x40': {'load': 'B', 'into': 'B'}, '0x41': {'load': 'C', 'into': 'B'}, '0x42': {'load':'D', 'into': 'B'}, '0x43': {'load': 'E', 'into': 'B'}, '0x44': {'load': 'H', 'into': 'B'}, '0x45': {'load': 'L', 'into': 'B'}, '0x46': {'load': '[HL]', 'into': 'B'}, '0x47': {'load': 'A', 'into': 'B'}, '0x48': {'load': 'B', 'into': 'C'}, '0x49': {'load': 'C', 'into': 'C'}, '0x4a': {'load': 'D', 'into': 'C'}, '0x4b': {'load': 'E', 'into': 'C'}, '0x4c': {'load': 'H', 'into': 'C'}, '0x4d': {'load': 'L', 'into': 'C'}, '0x4e': {'load': '[HL]', 'into': 'C'}, '0x4f': {'load': 'A', 'into': 'C'}, '0x53': {'load': 'E', 'into': 'D'}, '0x52': {'load': 'D', 'into': 'D'}, '0x51': {'load': 'C', 'into': 'D'}, '0x50': {'load': 'B', 'into': 'D'}, '0x57': {'load': 'A', 'into': 'D'}, '0x56': {'load': '[HL]', 'into': 'D'}, '0x55': {'load': 'L', 'into': 'D'}, '0x54': {'load': 'H', 'into': 'D'}, '0x59': {'load': 'C', 'into': 'E'}, '0x58': {'load': 'B', 'into': 'E'}, '0xe': {'load': 'd8', 'into': 'C'}, '0xfa': {'load': '[a16]', 'into': 'A'}, '0x7a': {'load': 'D', 'into': 'A'}, '0xf2': {'load': '[C]', 'into': 'A'}, '0x7c': {'load': 'H', 'into': 'A'}, '0x7b': {'load': 'E', 'into': 'A'}, '0x7e': {'load': '[HL]', 'into': 'A'}, '0x7d': {'load': 'L', 'into': 'A'}, '0x7f': {'load': 'A', 'into': 'A'}, '0x68': {'load': 'B', 'into': 'L'}, '0x69': {'load': 'C', 'into': 'L'}, '0x66': {'load': '[HL]', 'into': 'H'}, '0x67': {'load': 'A', 'into': 'H'}, '0x64': {'load': 'H', 'into': 'H'}, '0x65': {'load': 'L', 'into': 'H'}, '0x62': {'load': 'D','into': 'H'}, '0x63': {'load': 'E', 'into': 'H'}, '0x60': {'load': 'B', 'into': 'H'}, '0x61': {'load': 'C', 'into': 'H'}, '0x6f': {'load': 'A', 'into': 'L'}, '0x6d': {'load': 'L', 'into': 'L'}, '0x6e': {'load': '[HL]', 'into': 'L'}, '0x6b': {'load': 'E', 'into': 'L'}, '0x6c': {'load':'H', 'into': 'L'}, '0x6a': {'load': 'D', 'into': 'L'}, '0x79': {'load': 'C', 'into': 'A'}, '0x78': {'load': 'B', 'into': 'A'}, '0x71': {'load': 'C', 'into': '[HL]'}, '0x70': {'load': 'B', 'into': '[HL]'}, '0x73': {'load': 'E', 'into': '[HL]'}, '0x72': {'load': 'D', 'into': '[HL]'}, '0x75': {'load': 'L', 'into': '[HL]'}, '0x74': {'load': 'H', 'into': '[HL]'}, '0x77': {'load': 'A', 'into': '[HL]'}, '0xea': {'load': 'A', 'into': '[a16]'}, '0x1e': {'load': 'd8', 'into': 'E'}, '0x1a': {'load': '[DE]', 'into': 'A'}, '0xe2': {'load': 'A', 'into': '[C]'}, '0x16': {'load': 'd8', 'into': 'D'}, '0x12': {'load': 'A', 'into': '[DE]'}, '0x11': {'load': 'd16', 'into': 'DE'}}

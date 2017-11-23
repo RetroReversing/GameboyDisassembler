@@ -116,6 +116,7 @@ class State {
     this.pc = pc;
     this.allowLogging = allowLogging;
     this.symbols = symbols
+    this.a=0x00;
   }
 }
 
