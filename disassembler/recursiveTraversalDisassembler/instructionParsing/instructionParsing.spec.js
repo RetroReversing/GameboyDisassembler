@@ -1,12 +1,14 @@
-import {parseRetInstruction, parseLoadInstruction, parseCallInstruction, calculateJumpLocation, parseJumpInstruction} from './instructionParsing';
+import {parseRetInstruction, parseLoadInstruction, parseCallInstruction, calculateJumpLocation, parseJumpInstruction, executeLoadInstruction, convert16BitInstructionOperandsToNumber, convert8BitInstructionOperandToNumber} from './instructionParsing';
 import * as assert from 'assert';
 import { describe, it, beforeEach } from 'mocha';
+import { State } from '../RecursiveTraversalDisassembler';
 
 var blankState;
 beforeEach(function () {
   blankState = {callStack: [0x100], jumpAssemblyInstructions: {}, 
   additionalPaths: [], jumpAddresses: [], pc: 0x00, allAssemblyInstructions: {}, bank:0, a:0,
- symbols:{}, allowSymbols:false, bankSwitches:[]};
+ symbols:{}, allowSymbols:false, bankSwitches:[], infoMessages:[]};
+  blankState = Object.assign(new State(), blankState);
 });
 
 describe('Instruction parsing', function () {
@@ -36,6 +38,13 @@ describe('Instruction parsing', function () {
     blankState.pc = 0x6F;
     const resultState = parseJumpInstruction([0xe9], blankState);
     assert.deepEqual(resultState.pc, 0x6F);
+  });
+});
+
+describe('Common instruction utility functions', function () {
+  it('should be able to convert8BitInstructionOperandToNumber [62, 255] to 0xFF (255)', function () {
+    const result = convert8BitInstructionOperandToNumber([62, 255], blankState);
+    assert.deepEqual(result, 255);
   });
 });
 
@@ -90,5 +99,26 @@ describe('Load/Store/Move instructions', function () {
     const stateWithARegisterSetTo9 = Object.assign({},blankState,{a:0x09});
     const resultState = parseLoadInstruction([0xEA,0x00,0x01], stateWithARegisterSetTo9);
     assert.deepEqual(resultState.bank, 0x00);
+  });
+  
+  it('should load A into B (B=A)', function () {
+    const stateWithARegisterSetTo9 = Object.assign({},blankState,{a:0x09});
+    const resultState = executeLoadInstruction([71], stateWithARegisterSetTo9);
+    assert.deepEqual(resultState.b, 0x09);
+  });
+
+  it('should load A into [a16] ([a16]=A)', function () {
+    const stateWithARegisterSetTo9 = Object.assign({},blankState,{a:0x09});
+    const instruction = [ 234, 0, 1 ];
+    const resultState = executeLoadInstruction(instruction, stateWithARegisterSetTo9);
+    const address16 = convert16BitInstructionOperandsToNumber(instruction);
+    assert.deepEqual(resultState.memory[address16], 0x09);
+  });
+
+  it('should load d8 into A (A=d8)', function () {
+    const stateWithARegisterSetTo9 = Object.assign({},blankState,{a:0x09});
+    const instruction = [ 62, 225 ];
+    const resultState = executeLoadInstruction(instruction, stateWithARegisterSetTo9);
+    assert.deepEqual(resultState.a, 225);
   });
 });

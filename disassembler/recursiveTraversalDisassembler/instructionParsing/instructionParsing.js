@@ -1,8 +1,9 @@
-import {isJumpInstruction, isLoadInstruction, isCallInstruction, isRetInstruction, isJumpConditionalInstruction, isRetConditionalInstruction} from '../../disassemblerInstructions';
+import {isJumpInstruction, isLoadInstruction, isCallInstruction, isRetInstruction, isJumpConditionalInstruction, isRetConditionalInstruction, loadInstructions} from '../../disassemblerInstructions';
 import {DisassembleBytesWithLinearSweep} from '../../linearSweepDisassembler/LinearSweepDisassembler';
 import {convertToHex, convertTo2CharacterHexAddress, convertTo8BitSignedValue, convertHexStringToNumber, convertTo8CharacterHexAddress} from '../../Util/ValueConversion';
 import {logAction, logError} from '../../Util/Logger';
 import {hasAlreadyVisited} from '../RecursiveTraversalDisassembler';
+import * as _ from 'lodash';
 
 function addAdditionalTraversalPath (state, instruction) {
   state.additionalPaths.push(state.pc + instruction.length);
@@ -73,17 +74,76 @@ export function parseCallInstruction (instruction, state) {
   return state;
 }
 
+function parseBankSwitch(state) {
+  logAction(`BANK: Bank switch to ${state.a}`, state);
+  const pcFormattedAsString = convertTo8CharacterHexAddress(state.pc);
+  state.infoMessages.push(`Info: Bank switch to ${state.a} at 0x${pcFormattedAsString}`);
+  state.bank = state.a;
+  state.bankSwitches[state.pc] = state.a;
+  return state;
+}
+
+function parseOperands(expression, instruction) {
+  if (expression === '[a16]') { 
+    const address16 = convert16BitInstructionOperandsToNumber(instruction);
+    return '['+address16+']';
+  }
+  if (expression === 'd8') {
+    const immediateValue = convert8BitInstructionOperandToNumber(instruction);
+    return 'i:'+immediateValue;
+  }
+  return expression;
+}
+
+function parseLoadSource(loadInstructionInfo, instruction, state) {
+  let loadSource = loadInstructionInfo.load.toLowerCase();
+  loadSource = parseOperands(loadSource, instruction);
+  return loadSource;
+}
+function parseLoadDestination(loadInstructionInfo, instruction, state) {
+  let loadDestination = loadInstructionInfo.into.toLowerCase();
+  loadDestination = parseOperands(loadDestination, instruction);
+  return loadDestination;
+}
+
+function handleLoadFromImmediateValue(loadSource, loadDestination, state) {
+  if (!_.startsWith(loadSource,'i:') ) return state;
+  state[loadDestination] = +loadSource.replace('i:','');
+  return state;
+}
+
+export function executeLoadInstruction(instruction, state) {
+  const opCodeAsHexString = '0x'+convertTo2CharacterHexAddress(instruction[0]).toLowerCase();
+  const loadInstructionInfo = loadInstructions[opCodeAsHexString];
+  const loadDestination = parseLoadDestination(loadInstructionInfo, instruction, state);
+  const loadSource = parseLoadSource(loadInstructionInfo, instruction, state);
+  if (_.startsWith(loadDestination,'[') ) {
+    const destination = loadDestination.replace('[','').replace(']','');
+    state.memory[destination] = state[loadSource];
+    return state;
+  } 
+  else if (_.startsWith(loadSource,'i:') ) {
+    state = handleLoadFromImmediateValue(loadSource,loadDestination, state);
+  }
+  else {
+    state[loadDestination] = state[loadSource];
+    return state;
+  }
+  // TODO: Finish implementing this for more load instructions
+  console.error('instruction:',instruction,loadInstructionInfo,loadDestination,'=',loadSource,state[loadDestination]);
+  return state;
+}
+
 export function parseLoadInstruction (instruction, state, additionalDetails='') {
   if (!isLoadInstruction(instruction)) return state;
   const ROM_ONLY = 0;
   const mbc = 1;
   const addr16 = convert16BitInstructionOperandsToNumber(instruction);
   if(mbc != ROM_ONLY && (addr16 == 0x2000 || addr16 == 0x2100)) {
-    logAction(`BANK: Bank switch to ${state.a}`, state);
-    state.bank = state.a;
-    state.bankSwitches[state.pc] = state.a;
-	}
-  return state;
+    return parseBankSwitch(state);
+  }
+  
+  return executeLoadInstruction(instruction, state);
 }
 
 export function parseRetInstruction (instruction, state, additionalDetails='') {
@@ -173,6 +233,10 @@ function isRelativeJump (instruction) {
 
 export function convert16BitInstructionOperandsToNumber(instruction) {
   const hexString = convertTo2CharacterHexAddress(instruction[2]) + '' + convertTo2CharacterHexAddress(instruction[1]);
+  return convertHexStringToNumber(hexString);
+}
+export function convert8BitInstructionOperandToNumber(instruction) {
+  const hexString = convertTo2CharacterHexAddress(instruction[1]);
   return convertHexStringToNumber(hexString);
 }
 
