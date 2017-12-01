@@ -43,6 +43,6 @@ function toPaddedHexString (len, num, state={}, additionalDetails='') {
   return '0'.repeat(requiredNumberOfZeros) + str;
 }
 
-export function hexToNumber (hexStringWithoutPrefix) {
+export function hexToNumber (hexStringWithoutPrefix: string) {
   return parseInt(hexStringWithoutPrefix, 16);
 }

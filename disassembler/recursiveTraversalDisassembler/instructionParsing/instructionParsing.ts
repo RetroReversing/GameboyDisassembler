@@ -2,7 +2,7 @@ import {isJumpInstruction, isLoadInstruction, isCallInstruction, isRetInstructio
 import {DisassembleBytesWithLinearSweep} from '../../linearSweepDisassembler/LinearSweepDisassembler';
 import {convertToHex, convertTo2CharacterHexAddress, convertTo8BitSignedValue, convertHexStringToNumber, convertTo8CharacterHexAddress} from '../../Util/ValueConversion';
 import {logAction, logError} from '../../Util/Logger';
-import {hasAlreadyVisited} from '../RecursiveTraversalDisassembler';
+import {hasAlreadyVisited, State} from '../RecursiveTraversalDisassembler';
 import * as _ from 'lodash';
 
 function addAdditionalTraversalPath (state, instruction) {
@@ -57,7 +57,7 @@ function handleCallJumping (jumpDestination, instruction, state, additionalDetai
   return state;
 }
 
-export function parseCallInstruction (instruction, state) {
+export function parseCallInstruction (instruction, state: State) {
   if (!isCallInstruction(instruction)) return state;
   const jumpDestination = calculateJumpLocation(instruction, state);
   const userFriendlyJumpLocation = state.symbols[jumpDestination] || convertTo8CharacterHexAddress(jumpDestination, state, 'parseCallInstruction');
@@ -74,7 +74,7 @@ export function parseCallInstruction (instruction, state) {
   return state;
 }
 
-function parseBankSwitch(state) {
+function parseBankSwitch(state: State) {
   logAction(`BANK: Bank switch to ${state.a}`, state);
   const pcFormattedAsString = convertTo8CharacterHexAddress(state.pc);
   state.infoMessages.push(`Info: Bank switch to ${state.a} at 0x${pcFormattedAsString}`);
@@ -83,7 +83,7 @@ function parseBankSwitch(state) {
   return state;
 }
 
-function parseOperands(expression, instruction) {
+function parseOperands(expression: string, instruction) {
   if (expression === '[a16]') { 
     const address16 = convert16BitInstructionOperandsToNumber(instruction);
     return '['+address16+']';
@@ -95,24 +95,24 @@ function parseOperands(expression, instruction) {
   return expression;
 }
 
-function parseLoadSource(loadInstructionInfo, instruction, state) {
+function parseLoadSource(loadInstructionInfo, instruction, state: State) {
   let loadSource = loadInstructionInfo.load.toLowerCase();
   loadSource = parseOperands(loadSource, instruction);
   return loadSource;
 }
-function parseLoadDestination(loadInstructionInfo, instruction, state) {
+function parseLoadDestination(loadInstructionInfo, instruction, state: State) {
   let loadDestination = loadInstructionInfo.into.toLowerCase();
   loadDestination = parseOperands(loadDestination, instruction);
   return loadDestination;
 }
 
-function handleLoadFromImmediateValue(loadSource, loadDestination, state) {
+function handleLoadFromImmediateValue(loadSource, loadDestination, state: State) {
   if (!_.startsWith(loadSource,'i:') ) return state;
   state[loadDestination] = +loadSource.replace('i:','');
   return state;
 }
 
-export function executeLoadInstruction(instruction, state) {
+export function executeLoadInstruction(instruction, state: State) {
   const opCodeAsHexString = '0x'+convertTo2CharacterHexAddress(instruction[0]).toLowerCase();
   const loadInstructionInfo = loadInstructions[opCodeAsHexString];
   const loadDestination = parseLoadDestination(loadInstructionInfo, instruction, state);
@@ -134,10 +134,10 @@ export function executeLoadInstruction(instruction, state) {
   return state;
 }
 
-export function parseLoadInstruction (instruction, state, additionalDetails='') {
+export function parseLoadInstruction (instruction, state: State, additionalDetails='') {
   if (!isLoadInstruction(instruction)) return state;
-  const ROM_ONLY = 0;
-  const mbc = 1;
+  const ROM_ONLY:number = 0;
+  const mbc:number = 1;
   const addr16 = convert16BitInstructionOperandsToNumber(instruction);
   if(mbc != ROM_ONLY && (addr16 == 0x2000 || addr16 == 0x2100)) {
     return parseBankSwitch(state);
