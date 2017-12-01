@@ -29,9 +29,9 @@ export function DisassembleBytesWithRecursiveTraversalIntoOptimizedArray (bytesT
 
 export function DisassembleBytesWithRecursiveTraversalFormatted (bytesToDisassemble, startAddress = 0x100, allowLogging = false, symbols={}) {
   const groupsOfInstructions = reduceBytesToDisassembleIntoInstructionGroupData(bytesToDisassemble);
-  const resultingInstructionMap = disassembleLoop(startAddress, groupsOfInstructions, bytesToDisassemble, [], allowLogging, symbols);
-  const formattedMapOfInstructions = formatIntoGBDisBinaryFormat(resultingInstructionMap.allAssemblyInstructions, groupsOfInstructions);
-  return formattedMapOfInstructions;
+  const resultingState = disassembleLoop(startAddress, groupsOfInstructions, bytesToDisassemble, [], allowLogging, symbols);
+  const formattedMapOfInstructions = formatIntoGBDisBinaryFormat(resultingState, groupsOfInstructions);
+  return formattedMapOfInstructions;  
 }
 
 export function DisassembleBytesWithRecursiveTraversalFormattedWithHeader (bytesToDisassemble, startAddress = 0x100, allowLogging = false, symbols={}) {
@@ -103,7 +103,7 @@ function handleInvalidNextState(state, instruction, bytesToDisassemble, groupsOf
 
 }
 
-class State {
+export class State {
   constructor(pc, jumpAddresses, allowLogging, symbols) {
     this.jumpAddresses = jumpAddresses;
     this.allAssemblyInstructions={};
@@ -117,6 +117,9 @@ class State {
     this.allowLogging = allowLogging;
     this.symbols = symbols
     this.a=0x00;
+    this.b=0x00;
+    this.infoMessages=[];
+    this.memory = {};
   }
 }
 
@@ -124,8 +127,6 @@ function disassembleLoop (startAddress, groupsOfInstructions, bytesToDisassemble
   resetVisitedAddresses();
   addressesToJumpTo.push(startAddress);
   let state = new State(startAddress, [startAddress], true, symbols);
-  //{pc: startAddress, jumpAddresses: [startAddress], jumpAssemblyInstructions: {}, allAssemblyInstructions: {}, callStack: [], additionalPaths: [], allowLogging: allowLogging, 
-  //symbols: symbols, bankSwitches:{}};
   let currentLoop = 0;
   while (true) {
     const instruction = groupsOfInstructions.instructions[state.pc];

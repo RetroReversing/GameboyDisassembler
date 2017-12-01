@@ -18,7 +18,7 @@ describe('gb-disasm Formatting output tests', function () {
       skipBytes: 0,
       keys: [ 0, 1, 2, 4, 5 ],
       lastAddedInstruction: 5 };
-    const resultingState = formatIntoGBDisBinaryFormat(testInstructions, groupsOfInstructions);
+    const resultingState = formatIntoGBDisBinaryFormat({allAssemblyInstructions:testInstructions, infoMessages:[]}, groupsOfInstructions);
     const outputAsString = resultingState.join('\n');
     assert.deepEqual(outputAsString,
 `[0x00000000] 0x04           INC B

@@ -1,12 +1,13 @@
 import {reduce, map, isUndefined} from 'lodash';
 import {convertTo8CharacterHexAddress, convertTo2CharacterHexAddress, hexToNumber} from '../Util/ValueConversion';
 
-export function formatIntoGBDisBinaryFormat (mapOfInstructions, groupsOfInstructions) {
+export function formatIntoGBDisBinaryFormat (state, groupsOfInstructions) {
+  const mapOfInstructions = state.allAssemblyInstructions;
   const sortedMapOfInstructions = sortMapOfInstructions(mapOfInstructions);
   const formattedMapOfInstructions = map(sortedMapOfInstructions, function formatInstruction (instructionArray, address) {
     return getFullAddress(address) + ' ' + getHexBytesForInstruction(address, groupsOfInstructions) + instructionArray;
   });
-  return formattedMapOfInstructions;
+  return state.infoMessages.concat(formattedMapOfInstructions);
 }
 
 export function sortMapOfInstructions (mapOfInstructions) {
