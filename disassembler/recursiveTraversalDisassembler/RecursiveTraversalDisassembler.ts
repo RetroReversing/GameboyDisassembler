@@ -62,8 +62,8 @@ function resetVisitedAddresses () {
 
 export function handleSymFile(symFile) {
   if (symFile)
-  return parseSymFiles('',{},symFile);
-  return new Promise();
+    return parseSymFiles('',{},symFile);
+  return new Promise(null);
 }
 
 function findNewUnexploredPath(state, instruction) {
@@ -104,22 +104,26 @@ function handleInvalidNextState(state, instruction, bytesToDisassemble, groupsOf
 }
 
 export class State {
+  public jumpAddresses = [];
+  public allAssemblyInstructions={};
+  public jumpAssemblyInstructions={};
+  public callStack=[];
+  public additionalPaths=[];
+  public allowLogging=false;
+  public symbols={};
+  public bankSwitches={};
+  public pc = 0x100;
+  public a=0x00;
+  public b=0x00;
+  public infoMessages=[];
+  public memory = {};
+  public bank = 0;
+  public nextAddress=0;
   constructor(pc, jumpAddresses, allowLogging, symbols) {
-    this.jumpAddresses = jumpAddresses;
-    this.allAssemblyInstructions={};
-    this.jumpAssemblyInstructions={};
-    this.callStack=[];
-    this.additionalPaths=[];
-    this.allowLogging=false;
-    this.symbols={};
-    this.bankSwitches={};
     this.pc = pc;
+    this.jumpAddresses = jumpAddresses;
     this.allowLogging = allowLogging;
-    this.symbols = symbols
-    this.a=0x00;
-    this.b=0x00;
-    this.infoMessages=[];
-    this.memory = {};
+    this.symbols = symbols;
   }
 }
 
