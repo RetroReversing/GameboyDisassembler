@@ -10,11 +10,12 @@ function addAdditionalTraversalPath (state, instruction) {
   return state;
 }
 
-export function parseJumpInstruction (instruction, state, additionalDetails='') {
+export function parseJumpInstruction (instruction, state: State, additionalDetails='') {
   if (!isJumpInstruction(instruction)) return state;
   
   if (instruction[0] === 233) {
-    console.error('Warning: Not Handling JP [HL] at: ', convertTo8CharacterHexAddress(state.pc,state,' Not Handling JP [HL] in parseJumpInstruction'));
+    const pcAs8CharacterAddress = convertTo8CharacterHexAddress(state.pc,state,' Not Handling JP [HL] in parseJumpInstruction');
+    state.infoMessages.push(`Warning: Not Handling JP [HL] at: ${pcAs8CharacterAddress}`);
     return state;
   }
   const jumpDestination = calculateJumpLocation(instruction, state);
@@ -74,10 +75,10 @@ export function parseCallInstruction (instruction, state: State) {
   return state;
 }
 
-function parseBankSwitch(state: State) {
+function parseBankSwitch(state: State, additionalDetails='') {
   logAction(`BANK: Bank switch to ${state.a}`, state);
   const pcFormattedAsString = convertTo8CharacterHexAddress(state.pc);
-  state.infoMessages.push(`Info: Bank switch to ${state.a} at 0x${pcFormattedAsString}`);
+  state.infoMessages.push(`Info: Bank switch to ${state.a} at 0x${pcFormattedAsString} ${additionalDetails}`);
   state.bank = state.a;
   state.bankSwitches[state.pc] = state.a;
   return state;
@@ -140,13 +141,13 @@ export function parseLoadInstruction (instruction, state: State, additionalDetai
   const mbc:number = 1;
   const addr16 = convert16BitInstructionOperandsToNumber(instruction);
   if(mbc != ROM_ONLY && (addr16 == 0x2000 || addr16 == 0x2100)) {
-    return parseBankSwitch(state);
+    return parseBankSwitch(state, additionalDetails);
   }
   
   return executeLoadInstruction(instruction, state);
 }
 
-export function parseRetInstruction (instruction, state, additionalDetails='') {
+export function parseRetInstruction (instruction, state: State, additionalDetails='') {
   if (!isRetInstruction(instruction)) return state;
   const jumpDestination = state.callStack.pop();
   if (!jumpDestination) {
@@ -240,9 +241,22 @@ export function convert8BitInstructionOperandToNumber(instruction) {
   return convertHexStringToNumber(hexString);
 }
 
-export function calculateJumpLocation (instruction, state) {
+
+function convertToPhysicalAddress(state:State, address) {
+  if(address < 0x4000) return address;
+  return ((state.bank-1) * 0x4000) + address;
+}
+
+export function calculateJumpLocation (instruction, state:State) {
   if (!isRelativeJump(instruction)) {
-    return convert16BitInstructionOperandsToNumber(instruction);
+    const absoluteAddress = convert16BitInstructionOperandsToNumber(instruction);
+    if(absoluteAddress > state.endAddress) {
+      const problematicPC = convertTo8CharacterHexAddress(state.pc,state,'addressTooHigh');
+      const physicalAddress = convertTo8CharacterHexAddress(convertToPhysicalAddress(state, absoluteAddress));
+      state.infoMessages.push(`[0x${problematicPC}] Warning: Address too high, ignoring 0x${convertTo2CharacterHexAddress(absoluteAddress)} (0x${physicalAddress})`)
+      return state.startAddress;
+    }
+    return absoluteAddress;
   }
   //
   // This presumes the current pc points to the first byte in this instruction

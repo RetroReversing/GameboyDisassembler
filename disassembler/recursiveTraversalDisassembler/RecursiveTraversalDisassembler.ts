@@ -119,6 +119,7 @@ export class State {
   public memory = {};
   public bank = 0;
   public nextAddress=0;
+  public endAddress=0x8000;
   constructor(pc, jumpAddresses, allowLogging, symbols) {
     this.pc = pc;
     this.jumpAddresses = jumpAddresses;
