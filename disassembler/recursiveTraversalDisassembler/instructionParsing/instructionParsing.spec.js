@@ -1,4 +1,4 @@
-import {parseRetInstruction, parseLoadInstruction, parseCallInstruction, calculateJumpLocation, parseJumpInstruction, executeLoadInstruction, convert16BitInstructionOperandsToNumber, convert8BitInstructionOperandToNumber} from './instructionParsing';
+import {parseRetInstruction, parseControlInstruction, parseLoadInstruction, parseCallInstruction, calculateJumpLocation, parseJumpInstruction, executeLoadInstruction, convert16BitInstructionOperandsToNumber, convert8BitInstructionOperandToNumber} from './instructionParsing';
 import * as assert from 'assert';
 import { describe, it, beforeEach } from 'mocha';
 import { State } from '../RecursiveTraversalDisassembler';
@@ -85,6 +85,13 @@ describe('Calculating jump location', function () {
   it('should be able to support Call instruction to 0x0307', function () {
     const result = calculateJumpLocation([205, 7, 3], {pc: 0x0});
     assert.deepEqual(result, 775);
+  });
+});
+
+describe('Control instructions', function () {
+  it('should parse HALT and display and info message', function () {
+    const resultState = parseControlInstruction([0x76], blankState);
+    assert.deepEqual(resultState.infoMessages, ['Warning: RGBASM could not handle HALT instruction properly (0x00000000)']);
   });
 });
 

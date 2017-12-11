@@ -11,6 +11,9 @@ export function isCallInstruction (instruction) {
 export function isRetInstruction (instruction) {
   return retInstructions[instruction[0]] !== undefined;
 }
+export function isControlInstruction (instruction) {
+  return controlInstructions[instruction[0]] !== undefined;
+}
 export function isLoadInstruction (instruction) {
   const opcodeAsLowercaseInstruction = '0x'+convertTo2CharacterHexAddress(instruction[0]).toLowerCase()
   return loadInstructions[opcodeAsLowercaseInstruction] !== undefined;
@@ -58,6 +61,9 @@ export const retInstructions = {
   0xD0: {conditional: true},
   0xD8: {conditional: true},
   0xD9: {conditional: false}
+};
+export const controlInstructions = {
+  0x76: {halt: true}
 };
 
 // TODO: Need to add flags to load instructions and parse the loads properly

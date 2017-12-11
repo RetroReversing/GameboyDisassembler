@@ -7,6 +7,7 @@ RAM: None
 Destination: non-Japanese
 Version: 0x00
 Header checksum: OK
+Warning: RGBASM could not handle HALT instruction properly (0x000001BB)
 [0x00000061] 0x04           INC B
 [0x00000062] 0x0C           INC C
 [0x00000063] 0x18 0x01      JR $01 ; 0x66

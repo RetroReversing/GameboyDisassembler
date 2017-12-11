@@ -1,4 +1,13 @@
-import {isJumpInstruction, isLoadInstruction, isCallInstruction, isRetInstruction, isJumpConditionalInstruction, isRetConditionalInstruction, loadInstructions} from '../../disassemblerInstructions';
+import {
+    isJumpInstruction,
+    isLoadInstruction,
+    isCallInstruction,
+    isRetInstruction,
+    isJumpConditionalInstruction,
+    isRetConditionalInstruction,
+    loadInstructions,
+    isControlInstruction
+} from '../../disassemblerInstructions';
 import {DisassembleBytesWithLinearSweep} from '../../linearSweepDisassembler/LinearSweepDisassembler';
 import {convertToHex, convertTo2CharacterHexAddress, convertTo8BitSignedValue, convertHexStringToNumber, convertTo8CharacterHexAddress} from '../../Util/ValueConversion';
 import {logAction, logError} from '../../Util/Logger';
@@ -78,9 +87,9 @@ export function parseCallInstruction (instruction, state: State) {
 function parseBankSwitch(state: State, additionalDetails='') {
   logAction(`BANK: Bank switch to ${state.a}`, state);
   const pcFormattedAsString = convertTo8CharacterHexAddress(state.pc);
-  state.infoMessages.push(`Info: Bank switch to ${state.a} at 0x${pcFormattedAsString} ${additionalDetails}`);
+  state.infoMessages.push(`Info: Bank switch to ${state.a} at 0x${pcFormattedAsString}`);
   state.bank = state.a;
-  state.bankSwitches[state.pc] = state.a;
+  state.bankSwitches[state.pc] = state.a; 
   return state;
 }
 
@@ -111,7 +120,7 @@ function handleLoadFromImmediateValue(loadSource, loadDestination, state: State)
   if (!_.startsWith(loadSource,'i:') ) return state;
   state[loadDestination] = +loadSource.replace('i:','');
   return state;
-}
+} 
 
 export function executeLoadInstruction(instruction, state: State) {
   const opCodeAsHexString = '0x'+convertTo2CharacterHexAddress(instruction[0]).toLowerCase();
@@ -132,6 +141,19 @@ export function executeLoadInstruction(instruction, state: State) {
   }
   // TODO: Finish implementing this for more load instructions
   console.error('instruction:',instruction,loadInstructionInfo,loadDestination,'=',loadSource,state[loadDestination]);
+  return state;
+}
+
+function handleHaltInstruction(instruction, state) {
+  if (instruction[0] !== 0x76) return state;
+  const problematicPC = convertTo8CharacterHexAddress(state.pc,state,'HALT instruction');
+  state.infoMessages.push(`Warning: RGBASM could not handle HALT instruction properly (0x${problematicPC})`);
+  return state;
+}
+
+export function parseControlInstruction (instruction, state: State, additionalDetails='') {
+  if (!isControlInstruction(instruction)) return state;
+  state = handleHaltInstruction(instruction, state);
   return state;
 }
 
@@ -208,6 +230,7 @@ export function parseInstruction (instruction, state, additionalDetails='') {
   state = parseCallInstruction(instruction, state);
   state = parseRetInstruction(instruction, state);
   state = parseLoadInstruction(instruction,state);
+  state = parseControlInstruction(instruction, state);
 
   if (state.pc === programCounterForThisInstruction) {
     return gotoNextInstructionLocation(state, instruction);
@@ -259,7 +282,7 @@ export function calculateJumpLocation (instruction, state:State) {
     return absoluteAddress;
   }
   //
-  // This presumes the current pc points to the first byte in this instruction
+  // This presumes the current pc points to the first byte in this instruction 
   //
   const signedValueOfRelativeJump = convertTo8BitSignedValue(instruction[1]);
   const properProgramCounterAlwaysPointsToNextInstruction = state.pc + (instruction.length);

@@ -7,6 +7,11 @@ RAM: 2 KBytes
 Destination: non-Japanese
 Version: 0xFF
 Header checksum: OK
+Warning: RGBASM could not handle HALT instruction properly (0x000004F2)
+Warning: RGBASM could not handle HALT instruction properly (0x00000407)
+Warning: RGBASM could not handle HALT instruction properly (0x0000035B)
+Warning: RGBASM could not handle HALT instruction properly (0x00000C6C)
+Warning: RGBASM could not handle HALT instruction properly (0x00000CDC)
 [0x00000100] 0x00           NOP
 [0x00000101] 0xC3 0x50 0x01 JP $0150
 [0x00000150] 0xC3 0x7D 0x04 JP $047D

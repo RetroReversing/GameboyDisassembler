@@ -7,13 +7,13 @@ RAM: None
 Destination: non-Japanese
 Version: 0x00
 Header checksum: OK
-Warning: RGBASM could not handle HALT instruction properly (0x000006B8)
-Info: Bank switch to 1 at 0x00000339
-Info: Bank switch to 2 at 0x00000358
-Info: Bank switch to 1 at 0x000003F5
+Info: Bank switch to 2 at 0x00000339
+Info: Bank switch to 1 at 0x00000358
+Info: Bank switch to 2 at 0x000003F5
 [0x00000404] Warning: Address too high, ignoring 0xFF80 (0x00013F80)
-Info: Bank switch to 2 at 0x0000042F
+Info: Bank switch to 1 at 0x0000042F
 Warning: RGBASM could not handle HALT instruction properly (0x0000019D)
+Warning: RGBASM could not handle HALT instruction properly (0x000006B8)
 [0x000000A1] 0x04           INC B
 [0x000000A2] 0x0C           INC C
 [0x000000A3] 0x18 0x0B      JR $0B ; 0xB0

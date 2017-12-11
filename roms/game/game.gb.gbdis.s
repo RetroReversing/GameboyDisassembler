@@ -7,6 +7,7 @@ RAM: None
 Destination: non-Japanese
 Version: 0x00
 Header checksum: OK
+Warning: RGBASM could not handle HALT instruction properly (0x00000150)
 [0x00000100] 0x00           NOP
 [0x00000101] 0xC3 0x50 0x01 JP $0150
 [0x00000150] 0x76           HALT
