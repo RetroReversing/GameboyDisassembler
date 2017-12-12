@@ -108,6 +108,10 @@ function parseOperands(expression: string, instruction) {
 function parseLoadSource(loadInstructionInfo, instruction, state: State) {
   let loadSource = loadInstructionInfo.load.toLowerCase();
   loadSource = parseOperands(loadSource, instruction);
+  if (_.startsWith(loadSource,'[') ) {
+    const source = loadSource.replace('[','').replace(']','');
+    return 'i:'+ state.memory[source];
+  }
   return loadSource;
 }
 function parseLoadDestination(loadInstructionInfo, instruction, state: State) {

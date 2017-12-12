@@ -128,4 +128,10 @@ describe('Load/Store/Move instructions', function () {
     const resultState = executeLoadInstruction(instruction, stateWithARegisterSetTo9);
     assert.deepEqual(resultState.a, 225);
   });
+  it('should load [$C2E8] into A (LD A,[$C2E8])', function () {
+    const stateWithMemorySet = Object.assign({},blankState,{a:0x09, memory:{0xC2E8:1234}});
+    const instruction = [ 0xFA, 0xE8, 0xC2  ];
+    const resultState = executeLoadInstruction(instruction, stateWithMemorySet);
+    assert.deepEqual(resultState.a, 1234);
+  });
 });
