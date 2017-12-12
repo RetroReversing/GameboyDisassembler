@@ -54,6 +54,17 @@ export function getROM(gameHeader) {
     return romSizes[romSize] || 'Unknown';
 }
 
+const colourGameBoyFlags = {
+    0:"Not used, old cartridge",
+    0x80: "works GameBoy and GameBoy Color",
+    0xC0: "works only on GameBoy Color"
+};
+
+export function getCGBFlag(gameHeader) {
+    const cgb =  gameHeader.colourGameBoy;
+    return colourGameBoyFlags[cgb] || '0x'+convertTo2CharacterHexAddress(cgb) || 'Unknown';
+}
+
 export function getVersion(gameHeader) {
     const flag =  gameHeader.maskRomVersionNumber;
     return '0x'+convertTo2CharacterHexAddress(flag);
@@ -117,7 +128,7 @@ export function printRomHeaderInformation(bytesToDisassemble) {
     const gbGameHeader = parseGBHeader(bytesToDisassemble);
     const romTitle = getRomTitle(gbGameHeader);
       return `Title: ${romTitle}
-CGB flag: Not used, old cartridge
+CGB flag: ${getCGBFlag(gbGameHeader)}
 SGB flag: ${getSGBFlag(gbGameHeader)}
 Type: ${getRomType(gbGameHeader)}
 ROM: ${getROM(gbGameHeader)}
